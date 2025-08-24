@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-// const backendUrl = import.meta.env.VITE_API_URL || "https://4852-2a0e-b107-1954-5301-4c2a-2295-9235-ce2d.ngrok-free.app";
 const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-const OPENAI_KEY = "sk-proj-6vSMYzLMzRkbiGjUlhIZT3BlbkFJhxasFu6nHvn3sL8odCN7";
-const GEMINI_KEY = "AIzaSyDFqs1vRaP05okrmau4ZP4Q_yIsOlnIYR";
+const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY;
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY;
 
 const ChatContext = createContext();
 

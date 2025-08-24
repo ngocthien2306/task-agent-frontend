@@ -1,29 +1,125 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+// const backendUrl = import.meta.env.VITE_API_URL || "https://4852-2a0e-b107-1954-5301-4c2a-2295-9235-ce2d.ngrok-free.app";
 const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const OPENAI_KEY = "sk-proj-6vSMYzLMzRkbiGjUlhIZT3BlbkFJhxasFu6nHvn3sL8odCN7";
+const GEMINI_KEY = "AIzaSyDFqs1vRaP05okrmau4ZP4Q_yIsOlnIYR";
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
-  const chat = async (message) => {
-    setLoading(true);
-    const data = await fetch(`${backendUrl}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message }),
-    });
-    const resp = (await data.json()).messages;
-    setMessages((messages) => [...messages, ...resp]);
-    setLoading(false);
-  };
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState();
   const [loading, setLoading] = useState(false);
   const [cameraZoomed, setCameraZoomed] = useState(true);
+  const [aiModel, setAiModel] = useState("gemini"); // Default to OpenAI
+  const [isListening, setListeningAnimation] = useState(false);
+
+  // Function to process text with OpenAI API
+  const processWithOpenAI = async (text) => {
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: text }],
+          max_tokens: 150
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error("Error with OpenAI processing:", error);
+      return text; // Fallback to original text on error
+    }
+  };
+
+  // Function to process text with Gemini API
+  const processWithGemini = async (text) => {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text }
+              ]
+            }
+          ],
+          generationConfig: {
+            maxOutputTokens: 150
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text;
+    } catch (error) {
+      console.error("Error with Gemini processing:", error);
+      return text; // Fallback to original text on error
+    }
+  };
+
+  // Main chat function
+  const chat = async (message) => {
+    setLoading(true);
+    
+    try {
+      // Pre-process the message with AI if needed
+      let processedMessage = message;
+      
+      if (aiModel === "openai") {
+        processedMessage = await processWithOpenAI(message);
+      } else if (aiModel === "gemini") {
+        processedMessage = await processWithGemini(message);
+      }
+      
+      // Send to backend
+      const data = await fetch(`${backendUrl}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: processedMessage }),
+      });
+      
+      const resp = (await data.json()).messages;
+      setMessages((messages) => [...messages, ...resp]);
+    } catch (error) {
+      console.error("Error in chat processing:", error);
+      // Add error message
+      setMessages((messages) => [
+        ...messages, 
+        { text: "Sorry, I couldn't process your message. Please try again." }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onMessagePlayed = () => {
     setMessages((messages) => messages.slice(1));
+  };
+
+  const toggleAiModel = () => {
+    setAiModel(prev => prev === "openai" ? "gemini" : "openai");
   };
 
   useEffect(() => {
@@ -43,6 +139,10 @@ export const ChatProvider = ({ children }) => {
         loading,
         cameraZoomed,
         setCameraZoomed,
+        aiModel,
+        toggleAiModel,
+        isListening,
+        setListeningAnimation
       }}
     >
       {children}

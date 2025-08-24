@@ -90,6 +90,14 @@ const facialExpressions = {
     mouthSmileRight: 0.38473918302092225,
     tongueOut: 0.9618479575523053,
   },
+  listening: {
+    eyeWideLeft: 0.3,
+    eyeWideRight: 0.3,
+    browInnerUp: 0.5,
+    jawOpen: 0.2,
+    mouthSmileLeft: 0.2,
+    mouthSmileRight: 0.2,
+  }
 };
 
 const corresponding = {
@@ -105,30 +113,217 @@ const corresponding = {
 };
 
 let setupMode = false;
+let audioContext = null;
 
 export function Avatar(props) {
   const { nodes, materials, scene } = useGLTF(
     "/models/64f1a714fe61576b46f27ca2.glb"
   );
 
-  const { message, onMessagePlayed, chat } = useChat();
+  const { message, onMessagePlayed, chat, isListening } = useChat();
 
   const [lipsync, setLipsync] = useState();
+  const [audioSource, setAudioSource] = useState(null);
+  const [audio, setAudio] = useState(null);
+  const audioStartTimeRef = useRef(0);
 
+  // Initialize audio context for mobile
   useEffect(() => {
-    console.log(message);
+    const initAudio = () => {
+      if (!audioContext) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            audioContext = new AudioContext();
+            // Create silent oscillator to unlock audio on mobile
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = 0; // Silent
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start(0);
+            oscillator.stop(0.001); // Run for 1ms
+            console.log("Audio context initialized");
+          }
+        } catch (e) {
+          console.error("Failed to initialize audio context:", e);
+        }
+      }
+    };
+
+    // Initialize on user interaction
+    const handleInteraction = () => {
+      initAudio();
+      // Remove event listeners after initialization
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
+
+  // Handle new messages
+  useEffect(() => {
+    console.log("Message update:", message);
     if (!message) {
-      setAnimation("Idle");
+      // If not actively listening and no message, return to Idle
+      if (!isListening) {
+        setAnimation("Idle");
+      }
       return;
     }
+
     setAnimation(message.animation);
     setFacialExpression(message.facialExpression);
     setLipsync(message.lipsync);
-    const audio = new Audio("data:audio/mp3;base64," + message.audio);
-    audio.play();
-    setAudio(audio);
-    audio.onended = onMessagePlayed;
+
+    // Clean up previous audio
+    if (audioSource) {
+      try {
+        if (audioSource.stop) {
+          audioSource.stop();
+        }
+      } catch (e) {
+        console.log("Could not stop previous audio source");
+      }
+    }
+    if (audio && audio.pause) {
+      audio.pause();
+      audio.src = '';
+    }
+
+    // Try Web Audio API first (better for mobile)
+    playAudioWithWebAPI(message.audio).catch(error => {
+      console.warn("Web Audio API failed, trying HTML Audio element:", error);
+      // Fallback to HTML Audio element
+      playAudioWithElement(message.audio).catch(err => {
+        console.error("Both audio methods failed:", err);
+        onMessagePlayed(); // Ensure message flow continues even if audio fails
+      });
+    });
   }, [message]);
+
+  // Web Audio API method
+  const playAudioWithWebAPI = async (base64Audio) => {
+    if (!audioContext) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+      } catch (e) {
+        throw new Error("Web Audio API not supported");
+      }
+    }
+
+    // Resume audio context if suspended (important for iOS)
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+
+    // Convert base64 to array buffer
+    const byteString = atob(base64Audio);
+    const arrayBuffer = new ArrayBuffer(byteString.length);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    for (let i = 0; i < byteString.length; i++) {
+      uint8Array[i] = byteString.charCodeAt(i);
+    }
+
+    // Decode audio data
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    // Create and configure source
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+    
+    // Store reference to source
+    setAudioSource(source);
+    
+    // Setup timing for lipsync
+    audioStartTimeRef.current = audioContext.currentTime;
+    
+    // Play audio
+    source.start(0);
+    
+    // Handle completion
+    source.onended = onMessagePlayed;
+    
+    return source;
+  };
+
+  // HTML Audio Element method (fallback)
+  const playAudioWithElement = (base64Audio) => {
+    return new Promise((resolve, reject) => {
+      try {
+        const audio = new Audio("data:audio/mp3;base64," + base64Audio);
+        
+        // Success handler
+        audio.oncanplaythrough = () => {
+          audio.play()
+            .then(() => {
+              audioStartTimeRef.current = Date.now() / 1000;
+              resolve(audio);
+            })
+            .catch(err => {
+              console.error("Audio play failed:", err);
+              reject(err);
+            });
+        };
+        
+        // Error handlers
+        audio.onerror = (err) => {
+          console.error("Audio load error:", err);
+          reject(err);
+        };
+        
+        // Completion handler
+        audio.onended = onMessagePlayed;
+        
+        // Store reference
+        setAudio(audio);
+        
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
+
+  // Effect to handle listening animation
+  useEffect(() => {
+    if (isListening) {
+      setAnimation("Thinking_0");
+      setFacialExpression("listening");
+    } else if (!message) {
+      setAnimation("Idle");
+      setFacialExpression("");
+    }
+  }, [isListening]);
+
+  // Clean up audio resources on unmount
+  useEffect(() => {
+    return () => {
+      if (audioSource) {
+        try {
+          if (audioSource.stop) {
+            audioSource.stop();
+          }
+        } catch (e) {
+          console.log("Could not stop audio source during cleanup");
+        }
+      }
+      
+      if (audio) {
+        audio.pause();
+        audio.src = '';
+      }
+    };
+  }, [audioSource, audio]);
 
   const { animations } = useGLTF("/models/animations.glb");
 
@@ -137,13 +332,20 @@ export function Avatar(props) {
   const [animation, setAnimation] = useState(
     animations.find((a) => a.name === "Idle") ? "Idle" : animations[0].name // Check if Idle animation exists otherwise use first animation
   );
+  
   useEffect(() => {
+    if (!actions[animation]) {
+      console.warn(`Animation "${animation}" not found. Available animations:`, 
+        Object.keys(actions).join(", "));
+      return;
+    }
+    
     actions[animation]
       .reset()
       .fadeIn(mixer.stats.actions.inUse === 0 ? 0 : 0.5)
       .play();
     return () => actions[animation].fadeOut(0.5);
-  }, [animation]);
+  }, [animation, actions, mixer.stats.actions.inUse]);
 
   const lerpMorphTarget = (target, value, speed = 0.1) => {
     scene.traverse((child) => {
@@ -176,7 +378,6 @@ export function Avatar(props) {
   const [winkLeft, setWinkLeft] = useState(false);
   const [winkRight, setWinkRight] = useState(false);
   const [facialExpression, setFacialExpression] = useState("");
-  const [audio, setAudio] = useState();
 
   useFrame(() => {
     !setupMode &&
@@ -201,17 +402,26 @@ export function Avatar(props) {
     }
 
     const appliedMorphTargets = [];
-    if (message && lipsync) {
-      const currentAudioTime = audio.currentTime;
-      for (let i = 0; i < lipsync.mouthCues.length; i++) {
-        const mouthCue = lipsync.mouthCues[i];
-        if (
-          currentAudioTime >= mouthCue.start &&
-          currentAudioTime <= mouthCue.end
-        ) {
-          appliedMorphTargets.push(corresponding[mouthCue.value]);
-          lerpMorphTarget(corresponding[mouthCue.value], 1, 0.2);
-          break;
+    if (message && lipsync && (audioSource || audio)) {
+      // Get current audio time based on what's playing
+      let currentAudioTime;
+      if (audioSource && audioContext) {
+        currentAudioTime = audioContext.currentTime - audioStartTimeRef.current;
+      } else if (audio) {
+        currentAudioTime = audio.currentTime;
+      }
+
+      if (currentAudioTime !== undefined) {
+        for (let i = 0; i < lipsync.mouthCues.length; i++) {
+          const mouthCue = lipsync.mouthCues[i];
+          if (
+            currentAudioTime >= mouthCue.start &&
+            currentAudioTime <= mouthCue.end
+          ) {
+            appliedMorphTargets.push(corresponding[mouthCue.value]);
+            lerpMorphTarget(corresponding[mouthCue.value], 1, 0.2);
+            break;
+          }
         }
       }
     }
@@ -240,6 +450,7 @@ export function Avatar(props) {
       onChange: (value) => setAnimation(value),
     },
     facialExpression: {
+      value: facialExpression,
       options: Object.keys(facialExpressions),
       onChange: (value) => setFacialExpression(value),
     },
@@ -264,6 +475,20 @@ export function Avatar(props) {
         }
       });
       console.log(JSON.stringify(emotionValues, null, 2));
+    }),
+    initializeAudio: button(() => {
+      try {
+        if (!audioContext) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioContext = new AudioContext();
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        console.log("Audio context initialized and resumed");
+      } catch (e) {
+        console.error("Failed to initialize audio:", e);
+      }
     }),
   });
 

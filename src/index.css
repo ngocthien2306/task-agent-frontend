@@ -20,5 +20,33 @@ body {
 
 body.greenScreen {
   background-color: #00ff00;
-  background-image: none;
+
+  background-image: linear-gradient(43deg, #32dab5 0%, #a9cf1f 46%, #FFCC70 100%);
+
+}
+
+/* New background color options with linear gradients */
+body.blueScreen {
+  background-color: #4158D0;
+  background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+}
+
+body.purpleScreen {
+  background-color: #8EC5FC;
+  background-image: linear-gradient(62deg, #8EC5FC 0%, #E0C3FC 100%);
+}
+
+body.pinkScreen {
+  background-color: #FF9A8B;
+  background-image: linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%);
+}
+
+body.orangeScreen {
+  background-color: #FBAB7E;
+  background-image: linear-gradient(62deg, #FBAB7E 0%, #F7CE68 100%);
+}
+
+body.redScreen {
+  background-color: #FF3CAC;
+  background-image: linear-gradient(225deg, #FF3CAC 0%, #784BA0 50%, #2B86C5 100%);
 }

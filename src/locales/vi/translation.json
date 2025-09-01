@@ -1,0 +1,119 @@
+{
+  "common": {
+    "loading": "Đang tải...",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "next": "Tiếp theo",
+    "previous": "Quay lại",
+    "submit": "Gửi",
+    "search": "Tìm kiếm",
+    "clear": "Xóa",
+    "select": "Chọn",
+    "language": "Ngôn ngữ"
+  },
+  "navigation": {
+    "home": "Trang chủ",
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "dashboard": "Bảng điều khiển",
+    "about": "Giới thiệu",
+    "contact": "Liên hệ",
+    "help": "Trợ giúp",
+    "logout": "Đăng xuất"
+  },
+  "auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "username": "Tên người dùng",
+    "password": "Mật khẩu",
+    "email": "Email",
+    "firstName": "Tên",
+    "lastName": "Họ",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "forgotPassword": "Quên mật khẩu?",
+    "rememberMe": "Ghi nhớ tôi",
+    "alreadyHaveAccount": "Đã có tài khoản?",
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "signIn": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "signOut": "Đăng xuất"
+  },
+  "profile": {
+    "personalInfo": "Thông tin cá nhân",
+    "professionalInfo": "Thông tin nghề nghiệp",
+    "preferences": "Tùy chọn",
+    "occupation": "Nghề nghiệp",
+    "company": "Công ty",
+    "industry": "Ngành nghề",
+    "position": "Cấp bậc",
+    "workLocation": "Nơi làm việc",
+    "phone": "Số điện thoại",
+    "dateOfBirth": "Ngày sinh",
+    "timezone": "múi giờ",
+    "language": "Ngôn ngữ ưa thích",
+    "avatar": "Ảnh đại diện"
+  },
+  "onboarding": {
+    "welcome": "Chào mừng đến với Avatar 3D",
+    "letsGetStarted": "Hãy bắt đầu nào",
+    "tellUsAboutYou": "Hãy cho chúng tôi biết về bạn",
+    "step": "Bước {{current}} / {{total}}",
+    "personalDetails": "Thông tin cá nhân",
+    "workPreferences": "Sở thích công việc",
+    "goals": "Mục tiêu của bạn",
+    "complete": "Hoàn thành thiết lập",
+    "skip": "Bỏ qua",
+    "workStyle": "Phong cách làm việc",
+    "communicationStyle": "Phong cách giao tiếp",
+    "interactionPreference": "Cách tương tác ưa thích",
+    "interests": "Sở thích",
+    "customInstructions": "Hướng dẫn tùy chỉnh",
+    "setupComplete": "Thiết lập hoàn tất!",
+    "readyToUse": "Avatar 3D của bạn đã sẵn sàng sử dụng"
+  },
+  "workStyles": {
+    "organized": "Có tổ chức",
+    "flexible": "Linh hoạt",
+    "creative": "Sáng tạo", 
+    "analytical": "Phân tích"
+  },
+  "communicationStyles": {
+    "friendly": "Thân thiện",
+    "professional": "Chuyên nghiệp",
+    "direct": "Trực tiếp",
+    "casual": "Thoải mái"
+  },
+  "interactionPreferences": {
+    "detailed": "Chi tiết",
+    "concise": "Ngắn gọn",
+    "conversational": "Đối thoại"
+  },
+  "errors": {
+    "required": "Trường này là bắt buộc",
+    "invalidEmail": "Vui lòng nhập địa chỉ email hợp lệ",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "minLength": "Phải có ít nhất {{min}} ký tự",
+    "maxLength": "Không được quá {{max}} ký tự",
+    "networkError": "Lỗi mạng. Vui lòng thử lại.",
+    "serverError": "Lỗi máy chủ. Vui lòng liên hệ hỗ trợ.",
+    "unknownError": "Đã xảy ra lỗi không xác định"
+  },
+  "success": {
+    "profileUpdated": "Cập nhật hồ sơ thành công",
+    "settingsSaved": "Lưu cài đặt thành công",
+    "onboardingComplete": "Hoàn thành quá trình giới thiệu thành công"
+  },
+  "placeholders": {
+    "addInterest": "Thêm sở thích...",
+    "customInstructions": "Các tùy chọn hoặc hướng dẫn cụ thể cho trợ lý AI của bạn..."
+  },
+  "messages": {
+    "notSet": "Chưa thiết lập",
+    "retry": "Thử lại",
+    "add": "Thêm"
+  }
+}

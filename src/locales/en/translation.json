@@ -1,0 +1,119 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "close": "Close",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "search": "Search",
+    "clear": "Clear",
+    "select": "Select",
+    "language": "Language"
+  },
+  "navigation": {
+    "home": "Home",
+    "profile": "Profile",
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "about": "About",
+    "contact": "Contact",
+    "help": "Help",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out"
+  },
+  "profile": {
+    "personalInfo": "Personal Information",
+    "professionalInfo": "Professional Information",
+    "preferences": "Preferences",
+    "occupation": "Occupation",
+    "company": "Company",
+    "industry": "Industry",
+    "position": "Position Level",
+    "workLocation": "Work Location",
+    "phone": "Phone Number",
+    "dateOfBirth": "Date of Birth",
+    "timezone": "Timezone",
+    "language": "Language Preference",
+    "avatar": "Profile Picture"
+  },
+  "onboarding": {
+    "welcome": "Welcome to 3D Avatar",
+    "letsGetStarted": "Let's get started",
+    "tellUsAboutYou": "Tell us about yourself",
+    "step": "Step {{current}} of {{total}}",
+    "personalDetails": "Personal Details",
+    "workPreferences": "Work Preferences",
+    "goals": "Your Goals",
+    "complete": "Complete Setup",
+    "skip": "Skip for now",
+    "workStyle": "Work Style",
+    "communicationStyle": "Communication Style",
+    "interactionPreference": "Interaction Preference",
+    "interests": "Interests",
+    "customInstructions": "Custom Instructions",
+    "setupComplete": "Setup Complete!",
+    "readyToUse": "Your 3D Avatar is ready to use"
+  },
+  "workStyles": {
+    "organized": "Organized",
+    "flexible": "Flexible", 
+    "creative": "Creative",
+    "analytical": "Analytical"
+  },
+  "communicationStyles": {
+    "friendly": "Friendly",
+    "professional": "Professional",
+    "direct": "Direct",
+    "casual": "Casual"
+  },
+  "interactionPreferences": {
+    "detailed": "Detailed",
+    "concise": "Concise",
+    "conversational": "Conversational"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Please enter a valid email address",
+    "passwordMismatch": "Passwords do not match",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be no more than {{max}} characters",
+    "networkError": "Network error. Please try again.",
+    "serverError": "Server error. Please contact support.",
+    "unknownError": "An unknown error occurred"
+  },
+  "success": {
+    "profileUpdated": "Profile updated successfully",
+    "settingsSaved": "Settings saved successfully",
+    "onboardingComplete": "Onboarding completed successfully"
+  },
+  "placeholders": {
+    "addInterest": "Add an interest...",
+    "customInstructions": "Any specific preferences or instructions for your AI assistant..."
+  },
+  "messages": {
+    "notSet": "Not set",
+    "retry": "Retry",
+    "add": "Add"
+  }
+}

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./useAuth";
 
 const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY;
@@ -11,8 +12,9 @@ export const ChatProvider = ({ children }) => {
   const [message, setMessage] = useState();
   const [loading, setLoading] = useState(false);
   const [cameraZoomed, setCameraZoomed] = useState(true);
-  const [aiModel, setAiModel] = useState("gemini"); // Default to OpenAI
+  const [aiModel, setAiModel] = useState("gemini"); // Default to Gemini
   const [isListening, setListeningAnimation] = useState(false);
+  const { user } = useAuth(); // Get current user from auth context
 
   // Function to process text with OpenAI API
   const processWithOpenAI = async (text) => {
@@ -78,6 +80,16 @@ export const ChatProvider = ({ children }) => {
 
   // Main chat function
   const chat = async (message) => {
+    // Check if user is authenticated
+    if (!user || !user.username) {
+      console.error("User not authenticated");
+      setMessages((messages) => [
+        ...messages, 
+        { text: "Please log in to use the chat feature." }
+      ]);
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -90,14 +102,22 @@ export const ChatProvider = ({ children }) => {
         processedMessage = await processWithGemini(message);
       }
       
-      // Send to backend
+      // Send to Node.js backend with user_id
       const data = await fetch(`${backendUrl}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: processedMessage }),
+        // TODO: change username to user_id
+        body: JSON.stringify({ 
+          message: processedMessage,
+          user_id: user.username  // Send username as user_id
+        }),
       });
+      
+      if (!data.ok) {
+        throw new Error(`HTTP error! status: ${data.status}`);
+      }
       
       const resp = (await data.json()).messages;
       setMessages((messages) => [...messages, ...resp]);

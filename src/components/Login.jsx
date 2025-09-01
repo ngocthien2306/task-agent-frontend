@@ -3,6 +3,7 @@ import { AnimatedBackground } from "./AnimatedBackground";
 import { FloatingShapes } from "./FloatingShapes";
 
 export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPassword }) => {
+  const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
   const [formData, setFormData] = useState({
     username: "",
     password: ""
@@ -25,7 +26,7 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/auth/login", {
+      const response = await fetch(`${pythonApiUrl}/api/v1/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,7 +45,7 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
         localStorage.setItem("tokenType", data.token_type);
         
         // Get user info
-        const userResponse = await fetch("http://localhost:8000/api/v1/auth/me", {
+        const userResponse = await fetch(`${pythonApiUrl}/api/v1/auth/me`, {
           headers: {
             "Authorization": `${data.token_type} ${data.access_token}`
           }

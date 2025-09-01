@@ -3,6 +3,7 @@ import { AnimatedBackground } from "./AnimatedBackground";
 import { FloatingShapes } from "./FloatingShapes";
 
 export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
+  const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
   const [formData, setFormData] = useState({
     email: "",
     username: "",
@@ -40,7 +41,7 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/auth/register", {
+      const response = await fetch(`${pythonApiUrl}/api/v1/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

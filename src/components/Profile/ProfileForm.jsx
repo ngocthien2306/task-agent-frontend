@@ -31,6 +31,8 @@ const ProfileForm = ({ initialData, onSave, onCancel, loading }) => {
   })
 
   const [newInterest, setNewInterest] = useState('')
+  const [showInterestDropdown, setShowInterestDropdown] = useState(false)
+  const [interestSearchTerm, setInterestSearchTerm] = useState('')
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -55,6 +57,27 @@ const ProfileForm = ({ initialData, onSave, onCancel, loading }) => {
       ...prev,
       interests: prev.interests.filter(item => item !== interest)
     }))
+  }
+
+  const handleSelectPredefinedInterest = (interest) => {
+    if (!formData.interests.includes(interest.value)) {
+      setFormData(prev => ({
+        ...prev,
+        interests: [...prev.interests, interest.value]
+      }))
+    }
+    setShowInterestDropdown(false)
+    setInterestSearchTerm('')
+  }
+
+  const filteredInterests = predefinedInterests.filter(interest => 
+    interest.label.toLowerCase().includes(interestSearchTerm.toLowerCase()) &&
+    !formData.interests.includes(interest.value)
+  )
+
+  const handleInterestSearchChange = (e) => {
+    setInterestSearchTerm(e.target.value)
+    setShowInterestDropdown(true)
   }
 
   const handleSubmit = (e) => {
@@ -98,6 +121,34 @@ const ProfileForm = ({ initialData, onSave, onCancel, loading }) => {
   const languages = [
     { value: 'en', label: 'English' },
     { value: 'vi', label: 'Tiếng Việt' },
+  ]
+
+  const predefinedInterests = [
+    { value: 'technology', label: 'Technology', icon: '💻' },
+    { value: 'sports', label: 'Sports', icon: '⚽' },
+    { value: 'reading', label: 'Reading', icon: '📚' },
+    { value: 'music', label: 'Music', icon: '🎵' },
+    { value: 'travel', label: 'Travel', icon: '✈️' },
+    { value: 'cooking', label: 'Cooking', icon: '👩‍🍳' },
+    { value: 'photography', label: 'Photography', icon: '📷' },
+    { value: 'art', label: 'Art', icon: '🎨' },
+    { value: 'fitness', label: 'Fitness', icon: '💪' },
+    { value: 'gaming', label: 'Gaming', icon: '🎮' },
+    { value: 'movies', label: 'Movies', icon: '🎬' },
+    { value: 'nature', label: 'Nature', icon: '🌿' },
+    { value: 'science', label: 'Science', icon: '🔬' },
+    { value: 'fashion', label: 'Fashion', icon: '👗' },
+    { value: 'food', label: 'Food', icon: '🍽️' },
+    { value: 'cars', label: 'Cars', icon: '🚗' },
+    { value: 'pets', label: 'Pets', icon: '🐕' },
+    { value: 'gardening', label: 'Gardening', icon: '🌱' },
+    { value: 'languages', label: 'Languages', icon: '🗣️' },
+    { value: 'business', label: 'Business', icon: '💼' },
+    { value: 'history', label: 'History', icon: '📜' },
+    { value: 'dancing', label: 'Dancing', icon: '💃' },
+    { value: 'writing', label: 'Writing', icon: '✍️' },
+    { value: 'volunteering', label: 'Volunteering', icon: '🤝' },
+    { value: 'meditation', label: 'Meditation', icon: '🧘' }
   ]
 
   return (
@@ -343,12 +394,39 @@ const ProfileForm = ({ initialData, onSave, onCancel, loading }) => {
         </h2>
         
         <div className="mb-4">
-          <div className="flex gap-2">
+          <div className="relative">
+            <input
+              type="text"
+              value={interestSearchTerm}
+              onChange={handleInterestSearchChange}
+              onFocus={() => setShowInterestDropdown(true)}
+              onBlur={() => setTimeout(() => setShowInterestDropdown(false), 200)}
+              placeholder="Search interests or add custom..."
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            
+            {showInterestDropdown && filteredInterests.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                {filteredInterests.map((interest) => (
+                  <div
+                    key={interest.value}
+                    onClick={() => handleSelectPredefinedInterest(interest)}
+                    className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  >
+                    <span className="text-2xl mr-3">{interest.icon}</span>
+                    <span className="text-gray-700">{interest.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-2 mt-2">
             <input
               type="text"
               value={newInterest}
               onChange={(e) => setNewInterest(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddInterest())}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddInterest())}
               placeholder={t('placeholders.addInterest')}
               className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -364,21 +442,27 @@ const ProfileForm = ({ initialData, onSave, onCancel, loading }) => {
         
         {formData.interests.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {formData.interests.map((interest, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-              >
-                {interest}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveInterest(interest)}
-                  className="ml-2 text-blue-600 hover:text-blue-800"
+            {formData.interests.map((interest, index) => {
+              const predefinedInterest = predefinedInterests.find(p => p.value === interest)
+              return (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-3 py-2 rounded-full text-sm bg-blue-100 text-blue-800"
                 >
-                  ×
-                </button>
-              </span>
-            ))}
+                  {predefinedInterest && (
+                    <span className="mr-2 text-lg">{predefinedInterest.icon}</span>
+                  )}
+                  {predefinedInterest ? predefinedInterest.label : interest}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveInterest(interest)}
+                    className="ml-2 text-blue-600 hover:text-blue-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              )
+            })}
           </div>
         )}
         

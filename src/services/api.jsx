@@ -17,6 +17,51 @@ export const apiEndpoints = {
     profile: (userId) => `${API_BASE_URL}/api/v1/onboarding/profile/${userId}`,
     updateProfile: (userId) => `${API_BASE_URL}/api/v1/onboarding/profile/${userId}`,
   },
+
+  // Task endpoints
+  tasks: {
+    getUserTasks: (userId) => `${API_BASE_URL}/api/v1/tasks/${userId}`,
+  },
+}
+
+// Task API service functions
+export const taskService = {
+  // Get user tasks with filters
+  getUserTasks: async (userId, filters = {}, authFetch) => {
+    console.log('taskService.getUserTasks called with:', { userId, filters });
+    
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (filters.status) queryParams.append('status', filters.status);
+      if (filters.category) queryParams.append('category', filters.category);
+      if (filters.priority) queryParams.append('priority', filters.priority);
+      if (filters.limit) queryParams.append('limit', filters.limit.toString());
+      
+      const url = `${apiEndpoints.tasks.getUserTasks(userId)}?${queryParams.toString()}`;
+      console.log('Fetching from URL:', url);
+      
+      const response = await authFetch(url, {
+        method: 'GET',
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('Response data:', data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching user tasks:', error);
+      throw error;
+    }
+  },
 }
 
 // Profile API service functions

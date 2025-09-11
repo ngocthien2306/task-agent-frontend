@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useChat } from "../hooks/useChat";
 
 // Import the Cherry component
@@ -7,6 +8,7 @@ import Profile from "./Profile/Profile";
 
 export const UI = ({ hidden, user, onLogout }) => {
   const input = useRef();
+  const navigate = useNavigate();
   const { chat, loading, cameraZoomed, setCameraZoomed, message, setListeningAnimation } = useChat();
   const [isListening, setIsListening] = useState(false);
   const [speechRecognition, setSpeechRecognition] = useState(null);
@@ -267,19 +269,9 @@ export const UI = ({ hidden, user, onLogout }) => {
               </Button>
 
               <Button
-                onClick={() => console.log('View Tasks - To be implemented')}
-                className="bg-blue-500 hover:bg-blue-600 text-white"
-                title="View Current Tasks"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </Button>
-
-              <Button
-                onClick={() => console.log('View Schedule - To be implemented')}
-                className="bg-green-500 hover:bg-green-600 text-white"
-                title="View Current Schedule"
+                onClick={() => navigate('/calendar')}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                title="View Calendar (Tasks & Schedule)"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5a2.25 2.25 0 012.25 2.25v7.5" />
@@ -395,20 +387,9 @@ export const UI = ({ hidden, user, onLogout }) => {
             </Button>
 
             <Button
-              onClick={() => console.log('View Tasks - To be implemented')}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              title="View Current Tasks"
-              size="w-10 h-10"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </Button>
-
-            <Button
-              onClick={() => console.log('View Schedule - To be implemented')}
-              className="bg-green-500 hover:bg-green-600 text-white"
-              title="View Current Schedule"
+              onClick={() => navigate('/calendar')}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+              title="View Calendar"
               size="w-10 h-10"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">

@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { ChatProvider } from "./hooks/useChat";
 import { AuthProvider } from "./hooks/useAuth";
@@ -8,10 +9,12 @@ import "./i18n"; // Import i18n configuration
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider>
-      <ChatProvider>
-        <App />
-      </ChatProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ChatProvider>
+          <App />
+        </ChatProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

@@ -1,10 +1,12 @@
 import { Loader } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Leva } from "leva";
+import { Routes, Route } from "react-router-dom";
 import { Experience } from "./components/Experience";
 import { UI } from "./components/UI";
 import { AuthScreen } from "./components/AuthScreen";
 import { OnboardingFlow } from "./components/Onboarding/OnboardingFlow";
+import CalendarPage from "./components/CalendarPage";
 import { useAuth } from "./hooks/useAuth";
 import { useState, useEffect } from "react";
 
@@ -91,10 +93,17 @@ function App() {
     <>
       <Loader />
       <Leva hidden />
-      <UI user={user} onLogout={logout} />
-      <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
-        <Experience />
-      </Canvas>
+      <Routes>
+        <Route path="/" element={
+          <>
+            <UI user={user} onLogout={logout} />
+            <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
+              <Experience />
+            </Canvas>
+          </>
+        } />
+        <Route path="/calendar" element={<CalendarPage user={user} />} />
+      </Routes>
     </>
   );
 }

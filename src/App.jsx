@@ -7,6 +7,8 @@ import { UI } from "./components/UI";
 import { AuthScreen } from "./components/AuthScreen";
 import { OnboardingFlow } from "./components/Onboarding/OnboardingFlow";
 import CalendarPage from "./components/CalendarPage";
+import NotificationToast from "./components/NotificationToast";
+import { NotificationsPage } from "./features/notifications";
 import { useAuth } from "./hooks/useAuth";
 import { useState, useEffect } from "react";
 
@@ -93,6 +95,10 @@ function App() {
     <>
       <Loader />
       <Leva hidden />
+      
+      {/* WebSocket Notifications - Always active when authenticated */}
+      <NotificationToast user={user} />
+      
       <Routes>
         <Route path="/" element={
           <>
@@ -103,6 +109,7 @@ function App() {
           </>
         } />
         <Route path="/calendar" element={<CalendarPage user={user} />} />
+        <Route path="/notifications" element={<NotificationsPage user={user} />} />
       </Routes>
     </>
   );

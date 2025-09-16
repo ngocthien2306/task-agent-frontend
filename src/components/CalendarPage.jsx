@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { taskService } from '../services/api';
+import TaskDetailModal from './TaskDetailModal';
 
 const CalendarPage = ({ user }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,13 +22,77 @@ const CalendarPage = ({ user }) => {
     priority: '',
     category: '',
   });
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [startInEditMode, setStartInEditMode] = useState(false);
 
   const { authFetch } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
 
+  const handleTaskClick = (task) => {
+    setSelectedTask(task);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleTaskUpdated = (updatedTask) => {
+    // Update task in local state
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === updatedTask.id ? { ...task, ...updatedTask } : task
+      )
+    );
+    
+    // Refresh data from server
+    setTimeout(() => {
+      fetchData();
+    }, 500);
+  };
+
+  const handleTaskDeleted = (taskId) => {
+    // Remove task from local state
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    
+    // Refresh data from server
+    setTimeout(() => {
+      fetchData();
+    }, 500);
+  };
+
+  const closeTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setSelectedTask(null);
+    setStartInEditMode(false);
+    // Clear URL params when closing modal
+    if (searchParams.has('openTask')) {
+      setSearchParams({});
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, [filters, contentType]);
+
+  // Handle URL params to open task modal automatically
+  useEffect(() => {
+    const openTaskId = searchParams.get('openTask');
+    const editMode = searchParams.get('editMode') === 'true';
+    
+    if (openTaskId && tasks.length > 0) {
+      // Try to find task in current tasks list
+      let taskToOpen = tasks.find(task => task.id === openTaskId);
+      
+      // If not found in tasks, check if task data was passed via location state
+      if (!taskToOpen && location.state && location.state.task) {
+        taskToOpen = location.state.task;
+      }
+      
+      if (taskToOpen) {
+        setSelectedTask(taskToOpen);
+        setStartInEditMode(editMode);
+        setIsTaskModalOpen(true);
+      }
+    }
+  }, [tasks, searchParams, location.state]);
 
   const fetchData = async () => {
     const userId = user?.username;
@@ -368,6 +435,17 @@ const CalendarPage = ({ user }) => {
                   </select>
                 </>
               )}
+
+              {/* Notifications Link */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/notifications')}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 bg-purple-500 text-white hover:bg-purple-600"
+                >
+                  🔔 Thông báo
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -475,8 +553,12 @@ const CalendarPage = ({ user }) => {
                                   {dayTasks.slice(0, 2).map(task => (
                                     <div
                                       key={`task-${task.id}`}
-                                      className={`text-xs p-1 rounded text-white truncate ${getTaskStatusColor(task.status)}`}
+                                      className={`text-xs p-1 rounded text-white truncate cursor-pointer hover:opacity-80 ${getTaskStatusColor(task.status)}`}
                                       title={`Task: ${task.title}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleTaskClick(task);
+                                      }}
                                     >
                                       📝 {task.title}
                                     </div>
@@ -532,7 +614,8 @@ const CalendarPage = ({ user }) => {
                                 {hourTasks.map(task => (
                                   <div 
                                     key={`task-${task.id}`}
-                                    className={`p-3 rounded-lg border-l-4 ${getPriorityColor(task.priority)} shadow-sm hover:shadow-md transition-shadow duration-200`}
+                                    className={`p-3 rounded-lg border-l-4 cursor-pointer ${getPriorityColor(task.priority)} shadow-sm hover:shadow-md transition-shadow duration-200`}
+                                    onClick={() => handleTaskClick(task)}
                                   >
                                     <div className="flex items-center gap-2 mb-2">
                                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">TASK</span>
@@ -615,7 +698,8 @@ const CalendarPage = ({ user }) => {
                         {dayTasks.map(task => (
                           <div
                             key={`task-${task.id}`}
-                            className={`p-3 rounded-lg border-2 ${getPriorityColor(task.priority)}`}
+                            className={`p-3 rounded-lg border-2 cursor-pointer hover:shadow-md transition-shadow duration-200 ${getPriorityColor(task.priority)}`}
+                            onClick={() => handleTaskClick(task)}
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">TASK</span>
@@ -742,6 +826,16 @@ const CalendarPage = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={isTaskModalOpen}
+        onClose={closeTaskModal}
+        onTaskUpdated={handleTaskUpdated}
+        onTaskDeleted={handleTaskDeleted}
+        startInEditMode={startInEditMode}
+      />
     </div>
   );
 };

@@ -4,11 +4,14 @@ import { Leva } from "leva";
 import { Routes, Route } from "react-router-dom";
 import { Experience } from "./components/Experience";
 import { UI } from "./components/UI";
-import { AuthScreen } from "./components/AuthScreen";
+import { AuthScreen } from "./components/Auth/AuthScreen";
+import { EmailVerification } from "./components/Auth/EmailVerification";
+import { PasswordReset } from "./components/Auth/PasswordReset";
 import { OnboardingFlow } from "./components/Onboarding/OnboardingFlow";
-import CalendarPage from "./components/CalendarPage";
-import NotificationToast from "./components/NotificationToast";
+import CalendarPage from "./components/Tasks/CalendarPage";
+import NotificationToast from "./components/Notifications/NotificationToast";
 import { NotificationsPage } from "./features/notifications";
+import AnimationStudio from "./pages/AnimationStudio";
 import { useAuth } from "./hooks/useAuth";
 import { useState, useEffect } from "react";
 
@@ -64,7 +67,13 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    return <AuthScreen />;
+    return (
+      <Routes>
+        <Route path="/verify-email" element={<EmailVerification />} />
+        <Route path="/reset-password" element={<PasswordReset />} />
+        <Route path="*" element={<AuthScreen />} />
+      </Routes>
+    );
   }
 
   // Show onboarding if user hasn't completed it or if we can't determine status
@@ -110,6 +119,7 @@ function App() {
         } />
         <Route path="/calendar" element={<CalendarPage user={user} />} />
         <Route path="/notifications" element={<NotificationsPage user={user} />} />
+        <Route path="/animation-studio" element={<AnimationStudio />} />
       </Routes>
     </>
   );

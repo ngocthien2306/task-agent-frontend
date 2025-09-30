@@ -18,11 +18,11 @@ const OnboardingFormModal = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Personal Info
-    first_name: initialData?.first_name || '',
-    last_name: initialData?.last_name || '',
-    phone: initialData?.phone || '',
-    date_of_birth: initialData?.date_of_birth || '',
-    avatar_url: initialData?.avatar_url || '',
+    first_name: initialData?.first_name || user?.profile?.first_name || '',
+    last_name: initialData?.last_name || user?.profile?.last_name || '',
+    phone: initialData?.phone || user?.profile?.phone || '',
+    date_of_birth: initialData?.date_of_birth || user?.profile?.date_of_birth || '',
+    avatar_url: initialData?.avatar_url || user?.profile?.avatar_url || '',
     
     // Professional Info
     occupation: initialData?.occupation || '',

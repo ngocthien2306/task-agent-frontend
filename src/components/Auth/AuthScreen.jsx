@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Login } from "./Login";
 import { Register } from "./Register";
 import { ForgotPassword } from "./ForgotPassword";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
 
 export const AuthScreen = () => {
   const [currentView, setCurrentView] = useState("login"); // "login", "register", "forgot"

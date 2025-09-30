@@ -7,6 +7,10 @@ export const apiEndpoints = {
     login: `${API_BASE_URL}/api/v1/auth/login`,
     register: `${API_BASE_URL}/api/v1/auth/register`,
     logout: `${API_BASE_URL}/api/v1/auth/logout`,
+    verifyEmail: `${API_BASE_URL}/api/v1/auth/verify-email`,
+    resendVerification: `${API_BASE_URL}/api/v1/auth/resend-verification`,
+    forgotPassword: `${API_BASE_URL}/api/v1/auth/forgot-password`,
+    resetPassword: `${API_BASE_URL}/api/v1/auth/reset-password`,
   },
   
   // Onboarding/Profile endpoints
@@ -161,6 +165,135 @@ export const profileService = {
     } catch (error) {
       console.error('Error skipping onboarding:', error)
       throw error
+    }
+  },
+}
+
+// Auth API service functions
+export const authService = {
+  // Register user
+  register: async (userData) => {
+    try {
+      const response = await fetch(apiEndpoints.auth.register, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Registration failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  },
+
+  // Login user
+  login: async (credentials) => {
+    try {
+      const response = await fetch(apiEndpoints.auth.login, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Login failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  },
+
+  // Verify email
+  verifyEmail: async (token) => {
+    try {
+      const response = await fetch(apiEndpoints.auth.verifyEmail, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Email verification failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Email verification error:', error);
+      throw error;
+    }
+  },
+
+  // Resend verification email
+  resendVerification: async (email) => {
+    try {
+      const response = await fetch(apiEndpoints.auth.resendVerification, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to resend verification email');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      throw error;
+    }
+  },
+
+  // Forgot password
+  forgotPassword: async (email) => {
+    try {
+      const response = await fetch(apiEndpoints.auth.forgotPassword, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to send password reset email');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
+  },
+
+  // Reset password
+  resetPassword: async (token, newPassword) => {
+    try {
+      const response = await fetch(apiEndpoints.auth.resetPassword, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, new_password: newPassword }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Password reset failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw error;
     }
   },
 }

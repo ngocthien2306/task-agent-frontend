@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import AvatarDisplay from '../../common/AvatarDisplay';
 
 const PersonalInfoStepEnhanced = ({ data, onChange }) => {
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ const PersonalInfoStepEnhanced = ({ data, onChange }) => {
     work_location: data.work_location || ''
   });
 
-  const [avatarPreview, setAvatarPreview] = useState(data.avatar_url || '');
+  const [avatarPreview, setAvatarPreview] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -87,18 +88,35 @@ const PersonalInfoStepEnhanced = ({ data, onChange }) => {
     setUploadingAvatar(true);
 
     try {
-      // Convert to base64 for preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target.result;
-        setAvatarPreview(imageUrl);
-        handleInputChange('avatar_url', imageUrl);
-        setUploadingAvatar(false);
-      };
-      reader.readAsDataURL(file);
+      // Upload file to server
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${pythonApiUrl}/api/v1/upload/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload avatar');
+      }
+
+      const result = await response.json();
+      
+      // Server now returns full URL, store and use for preview
+      const fullAvatarUrl = result.avatar_url;
+      handleInputChange('avatar_url', fullAvatarUrl);
+      setAvatarPreview(fullAvatarUrl); // Use full URL for immediate preview
+      setUploadingAvatar(false);
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      alert('Lỗi tải ảnh lên. Vui lòng thử lại.');
+      alert('Lỗi tải ảnh lên server. Vui lòng thử lại.');
       setUploadingAvatar(false);
     }
   };
@@ -117,20 +135,19 @@ const PersonalInfoStepEnhanced = ({ data, onChange }) => {
             onClick={handleAvatarClick}
             className="relative w-32 h-32 rounded-full border-4 border-gray-200 hover:border-blue-400 cursor-pointer transition-all duration-200 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center group"
           >
-            {avatarPreview ? (
-              <img
-                src={avatarPreview}
-                alt="Avatar preview"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <p className="text-xs text-gray-500">Click để tải ảnh</p>
-              </div>
-            )}
+            <AvatarDisplay 
+              avatarUrl={avatarPreview || formData.avatar_url}
+              size="2xl"
+              className="w-full h-full absolute inset-0"
+              fallback={
+                <div className="text-center">
+                  <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <p className="text-xs text-gray-500">Click để tải ảnh</p>
+                </div>
+              }
+            />
             
             {/* Upload overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">

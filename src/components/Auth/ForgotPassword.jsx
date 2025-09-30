@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { AnimatedBackground } from "./AnimatedBackground";
-import { FloatingShapes } from "./FloatingShapes";
+import { AnimatedBackground } from "../Animations/AnimatedBackground";
+import { FloatingShapes } from "../Animations/FloatingShapes";
+import { authService } from "../../services/api";
 
 export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
   const [email, setEmail] = useState("");
@@ -31,17 +32,13 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
     setError("");
 
     try {
-      // TODO: Implement actual forgot password API call
-      // For now, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate success
+      await authService.forgotPassword(email);
       setStep("success");
       if (onResetSuccess) {
         onResetSuccess(email);
       }
     } catch (err) {
-      setError("Failed to send reset email. Please try again.");
+      setError(err.message || "Failed to send reset email. Please try again.");
     } finally {
       setLoading(false);
     }

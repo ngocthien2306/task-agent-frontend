@@ -14,6 +14,7 @@ export const ChatProvider = ({ children }) => {
   const [cameraZoomed, setCameraZoomed] = useState(true);
   const [aiModel, setAiModel] = useState("gemini"); // Default to Gemini
   const [isListening, setListeningAnimation] = useState(false);
+  const [taskData, setTaskData] = useState(null); // For task toast display
   const { user } = useAuth(); // Get current user from auth context
 
   // Function to process text with OpenAI API
@@ -108,10 +109,9 @@ export const ChatProvider = ({ children }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        // TODO: change username to user_id
         body: JSON.stringify({ 
           message: processedMessage,
-          user_id: user.username  // Send username as user_id
+          userId: user.username  // Use userId to match backend expectation
         }),
       });
       
@@ -119,8 +119,22 @@ export const ChatProvider = ({ children }) => {
         throw new Error(`HTTP error! status: ${data.status}`);
       }
       
-      const resp = (await data.json()).messages;
+      const responseData = await data.json();
+      console.log('🔍 Full response data:', responseData);
+      
+      const resp = responseData.messages;
       setMessages((messages) => [...messages, ...resp]);
+
+      // Handle task data for toast display
+      if (responseData.taskData && responseData.taskData.displayType === 'toast') {
+        console.log('📋 Displaying task data toast:', responseData.taskData);
+        setTaskData(responseData.taskData);
+      } else {
+        console.log('❌ No taskData found in response or wrong displayType:', {
+          hasTaskData: !!responseData.taskData,
+          displayType: responseData.taskData?.displayType
+        });
+      }
     } catch (error) {
       console.error("Error in chat processing:", error);
       // Add error message
@@ -135,6 +149,10 @@ export const ChatProvider = ({ children }) => {
 
   const onMessagePlayed = () => {
     setMessages((messages) => messages.slice(1));
+  };
+
+  const onTaskToastClose = () => {
+    setTaskData(null);
   };
 
   const toggleAiModel = () => {
@@ -161,7 +179,9 @@ export const ChatProvider = ({ children }) => {
         aiModel,
         toggleAiModel,
         isListening,
-        setListeningAnimation
+        setListeningAnimation,
+        taskData,
+        onTaskToastClose
       }}
     >
       {children}

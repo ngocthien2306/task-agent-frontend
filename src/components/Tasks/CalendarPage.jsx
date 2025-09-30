@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { taskService } from '../services/api';
+import { useAuth } from '../../hooks/useAuth';
+import { taskService } from '../../services/api';
 import TaskDetailModal from './TaskDetailModal';
 
 const CalendarPage = ({ user }) => {

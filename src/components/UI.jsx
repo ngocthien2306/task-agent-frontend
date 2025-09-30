@@ -3,15 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useChat } from "../hooks/useChat";
 
 // Import the Cherry component
-import { CherryBlossomFalling } from "./CherryBlossomFalling";
+import { CherryBlossomFalling } from "./Animations/CherryBlossomFalling";
 import Profile from "./Profile/Profile";
+import { TaskToast } from "./Tasks/TaskToast";
 
 export const UI = ({ hidden, user, onLogout }) => {
   const input = useRef();
   const navigate = useNavigate();
-  const { chat, loading, cameraZoomed, setCameraZoomed, message, setListeningAnimation } = useChat();
+  const { chat, loading, cameraZoomed, setCameraZoomed, message, setListeningAnimation, taskData, onTaskToastClose } = useChat();
   const [isListening, setIsListening] = useState(false);
   const [speechRecognition, setSpeechRecognition] = useState(null);
+  const [speechLanguage, setSpeechLanguage] = useState('auto'); // Auto-detect language
+  const [lastDetectedLanguage, setLastDetectedLanguage] = useState('vi-VN');
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [showBlossoms, setShowBlossoms] = useState(true);
   const [customBackground, setCustomBackground] = useState(null);
@@ -123,9 +126,24 @@ export const UI = ({ hidden, user, onLogout }) => {
       }
 
       const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
+      
+      // Smart language handling for Vietnamese + English
+      let targetLanguage = speechLanguage;
+      
+      if (speechLanguage === 'auto') {
+        // Auto-detect: start with last detected or default to Vietnamese
+        targetLanguage = lastDetectedLanguage;
+      } else if (speechLanguage === 'mixed') {
+        // Mixed mode: start with Vietnamese but be ready to switch
+        targetLanguage = 'vi-VN';
+      }
+      
+      recognition.lang = targetLanguage;
       recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 5; // More alternatives for mixed language
+      
+      console.log(`🎤 Starting speech recognition with: ${targetLanguage} (mode: ${speechLanguage})`);
 
       recognition.onstart = () => {
         setIsListening(true);
@@ -133,8 +151,37 @@ export const UI = ({ hidden, user, onLogout }) => {
       };
 
       recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        input.current.value = transcript;
+        let finalTranscript = '';
+        let interimTranscript = '';
+        
+        // Process all results
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const transcript = result[0].transcript;
+          
+          if (result.isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        // Update input with final transcript or show interim results
+        if (finalTranscript) {
+          input.current.value = finalTranscript;
+          console.log('🎯 Final Vietnamese transcript:', finalTranscript);
+        } else if (interimTranscript) {
+          // Show interim results with visual indicator
+          input.current.value = interimTranscript;
+          input.current.style.fontStyle = 'italic';
+          input.current.style.color = '#666';
+        }
+        
+        // Reset styling when final
+        if (finalTranscript) {
+          input.current.style.fontStyle = 'normal';
+          input.current.style.color = '';
+        }
       };
 
       recognition.onend = () => {
@@ -143,9 +190,25 @@ export const UI = ({ hidden, user, onLogout }) => {
       };
 
       recognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
+        console.error('Speech recognition error:', event.error);
+        
+        // Handle specific Vietnamese speech recognition errors
+        if (event.error === 'no-speech') {
+          console.log('📢 No speech detected. Try speaking louder in Vietnamese.');
+        } else if (event.error === 'network') {
+          console.log('🌐 Network error. Speech recognition needs internet connection.');
+        } else if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please allow microphone permission for Vietnamese speech recognition.');
+        }
+        
         setIsListening(false);
         setListeningAnimation(false);
+        
+        // Reset input styling on error
+        if (input.current) {
+          input.current.style.fontStyle = 'normal';
+          input.current.style.color = '';
+        }
       };
 
       setSpeechRecognition(recognition);
@@ -168,6 +231,42 @@ export const UI = ({ hidden, user, onLogout }) => {
       stopListening();
     } else {
       startListening();
+    }
+  };
+
+  // Language options for speech recognition
+  const languageOptions = [
+    { code: 'auto', label: '🌐 Auto (VI/EN)', name: 'Auto-detect' },
+    { code: 'vi-VN', label: '🇻🇳 Tiếng Việt', name: 'Vietnamese' },
+    { code: 'en-US', label: '🇺🇸 English', name: 'English' },
+    { code: 'mixed', label: '🔄 Mixed (VI+EN)', name: 'Vietnamese + English' },
+    { code: 'en-GB', label: '🇬🇧 English (UK)', name: 'English (UK)' },
+    { code: 'ja-JP', label: '🇯🇵 日本語', name: 'Japanese' },
+    { code: 'ko-KR', label: '🇰🇷 한국어', name: 'Korean' },
+    { code: 'zh-CN', label: '🇨🇳 中文', name: 'Chinese' }
+  ];
+
+  // Language detection utility
+  const detectLanguage = (text) => {
+    // Simple heuristic to detect Vietnamese vs English
+    const vietnameseChars = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+    const englishWords = /\b(the|and|or|but|in|on|at|to|for|of|with|by|from|up|about|into|over|after|this|that|these|those|is|are|was|were|been|being|have|has|had|do|does|did|will|would|could|should|may|might|can|cannot|shall|must)\b/i;
+    
+    if (vietnameseChars.test(text)) {
+      return 'vi-VN';
+    } else if (englishWords.test(text)) {
+      return 'en-US';
+    }
+    return lastDetectedLanguage; // Fallback to last detected
+  };
+
+  const handleLanguageChange = (languageCode) => {
+    setSpeechLanguage(languageCode);
+    console.log(`🗣️ Speech language changed to: ${languageCode}`);
+    
+    // Stop current recognition if running
+    if (isListening) {
+      stopListening();
     }
   };
 
@@ -275,6 +374,16 @@ export const UI = ({ hidden, user, onLogout }) => {
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5a2.25 2.25 0 012.25 2.25v7.5" />
+                </svg>
+              </Button>
+
+              <Button
+                onClick={() => navigate('/animation-studio')}
+                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
+                title="Animation Studio"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5V18M15 7.5V18M3 16.811V8.69c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 010 1.953l-7.108 4.061A1.125 1.125 0 013 16.811z" />
                 </svg>
               </Button>
             </div>
@@ -398,6 +507,17 @@ export const UI = ({ hidden, user, onLogout }) => {
             </Button>
 
             <Button
+              onClick={() => navigate('/animation-studio')}
+              className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
+              title="Animation Studio"
+              size="w-10 h-10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5V18M15 7.5V18M3 16.811V8.69c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 010 1.953l-7.108 4.061A1.125 1.125 0 013 16.811z" />
+              </svg>
+            </Button>
+
+            <Button
               onClick={() => setCameraZoomed(!cameraZoomed)}
               className="bg-purple-500 hover:bg-purple-600 text-white"
               title={cameraZoomed ? "Zoom Out Camera" : "Zoom In Camera"}
@@ -453,10 +573,31 @@ export const UI = ({ hidden, user, onLogout }) => {
       {/* Chat Input - Bottom */}
       <div className="fixed bottom-0 left-0 right-0 z-10 p-2 sm:p-4 pointer-events-none">
         <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto max-w-screen-sm w-full mx-auto">
+          {/* Language Selector */}
+          <div className="relative">
+            <select
+              value={speechLanguage}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="appearance-none bg-white bg-opacity-80 backdrop-blur-md border border-white border-opacity-50 rounded-lg px-2 py-2 pr-8 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 hover:bg-opacity-90"
+              title="Select speech recognition language"
+            >
+              {languageOptions.map((lang) => (
+                <option key={lang.code} value={lang.code} className="bg-white">
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none">
+              <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+
           <div className="w-full relative">
             <input
               className="w-full placeholder:text-gray-600 placeholder:italic p-3 sm:p-4 pr-12 sm:pr-14 rounded-xl bg-white bg-opacity-80 backdrop-blur-md shadow-lg border border-white border-opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
-              placeholder="Ask me anything about tasks or scheduling..."
+              placeholder={`Ask me anything about tasks... (${languageOptions.find(l => l.code === speechLanguage)?.name || 'Vietnamese'})`}
               ref={input}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -471,7 +612,7 @@ export const UI = ({ hidden, user, onLogout }) => {
                   ? "bg-red-500 text-white animate-pulse shadow-lg" 
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
-              title={isListening ? "Stop listening" : "Start voice input"}
+              title={`${isListening ? "Stop listening" : "Start voice input"} (${languageOptions.find(l => l.code === speechLanguage)?.name})`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -514,6 +655,9 @@ export const UI = ({ hidden, user, onLogout }) => {
       {showProfile && (
         <Profile onClose={() => setShowProfile(false)} />
       )}
+
+      {/* Task Toast */}
+      <TaskToast taskData={taskData} onClose={onTaskToastClose} />
     </>
   );
 };

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { AnimatedBackground } from "./AnimatedBackground";
-import { FloatingShapes } from "./FloatingShapes";
+import { AnimatedBackground } from "../Animations/AnimatedBackground";
+import { FloatingShapes } from "../Animations/FloatingShapes";
+import { authService } from "../../services/api";
 
 export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
-  const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
   const [formData, setFormData] = useState({
     email: "",
     username: "",
@@ -14,6 +14,7 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,6 +23,7 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
       [name]: value
     }));
     if (error) setError("");
+    if (successMessage) setSuccessMessage("");
   };
 
   const handleSubmit = async (e) => {
@@ -39,31 +41,39 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
 
     setLoading(true);
     setError("");
+    setSuccessMessage("");
 
     try {
-      const response = await fetch(`${pythonApiUrl}/api/v1/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          username: formData.username,
-          password: formData.password,
-          first_name: formData.first_name || null,
-          last_name: formData.last_name || null
-        }),
+      const result = await authService.register({
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        first_name: formData.first_name || null,
+        last_name: formData.last_name || null
       });
 
-      const data = await response.json();
+      // Show success message with email verification note
+      setSuccessMessage(
+        "Account created successfully! Please check your email to verify your account before logging in."
+      );
+      
+      // Clear form
+      setFormData({
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+        first_name: "",
+        last_name: ""
+      });
 
-      if (response.ok) {
+      // Delay transition to login
+      setTimeout(() => {
         onRegisterSuccess();
-      } else {
-        setError(data.detail || "Registration failed");
-      }
+      }, 3000);
+
     } catch (err) {
-      setError("Network error. Please try again.");
+      setError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -86,8 +96,19 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {successMessage}
+            </div>
           </div>
         )}
 

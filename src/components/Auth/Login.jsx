@@ -1,15 +1,28 @@
-import { useState } from "react";
-import { AnimatedBackground } from "./AnimatedBackground";
-import { FloatingShapes } from "./FloatingShapes";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { AnimatedBackground } from "../Animations/AnimatedBackground";
+import { FloatingShapes } from "../Animations/FloatingShapes";
+import { authService } from "../../services/api";
 
 export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPassword }) => {
   const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     username: "",
     password: ""
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    // Check for success messages from URL params
+    if (searchParams.get("verified") === "true") {
+      setSuccessMessage("Email verified successfully! You can now log in.");
+    } else if (searchParams.get("reset") === "true") {
+      setSuccessMessage("Password reset successfully! You can now log in with your new password.");
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -18,49 +31,39 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
       [name]: value
     }));
     if (error) setError("");
+    if (successMessage) setSuccessMessage("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccessMessage("");
 
     try {
-      const response = await fetch(`${pythonApiUrl}/api/v1/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password
-        }),
+      const loginResult = await authService.login({
+        username: formData.username,
+        password: formData.password
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store the JWT token in localStorage
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("tokenType", data.token_type);
-        
-        // Get user info
-        const userResponse = await fetch(`${pythonApiUrl}/api/v1/auth/me`, {
-          headers: {
-            "Authorization": `${data.token_type} ${data.access_token}`
-          }
-        });
-
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          localStorage.setItem("user", JSON.stringify(userData));
-          onLoginSuccess(userData, data.access_token);
+      // Store the JWT token in localStorage
+      localStorage.setItem("token", loginResult.access_token);
+      localStorage.setItem("tokenType", loginResult.token_type);
+      
+      // Get user info
+      const userResponse = await fetch(`${pythonApiUrl}/api/v1/auth/me`, {
+        headers: {
+          "Authorization": `${loginResult.token_type} ${loginResult.access_token}`
         }
-      } else {
-        setError(data.detail || "Login failed");
+      });
+
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        localStorage.setItem("user", JSON.stringify(userData));
+        onLoginSuccess(userData, loginResult.access_token);
       }
     } catch (err) {
-      setError("Network error. Please try again.");
+      setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -83,8 +86,19 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {successMessage}
+            </div>
           </div>
         )}
 

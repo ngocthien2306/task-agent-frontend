@@ -117,7 +117,7 @@ let audioContext = null;
 
 export function Avatar(props) {
   const { nodes, materials, scene } = useGLTF(
-    "/models/64f1a714fe61576b46f27ca2.glb"
+    "/models/avatar4.glb"
   );
 
   const { message, onMessagePlayed, chat, isListening } = useChat();
@@ -599,5 +599,5 @@ export function Avatar(props) {
   );
 }
 
-useGLTF.preload("/models/64f1a714fe61576b46f27ca2.glb");
+useGLTF.preload("/models/avatar.glb");
 useGLTF.preload("/models/animations.glb");

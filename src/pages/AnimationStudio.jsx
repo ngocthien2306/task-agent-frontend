@@ -12,12 +12,12 @@ const AnimationStudio = () => {
   const [animationSpeed, setAnimationSpeed] = useState(1);
   
   const availableModels = [
-    '64f1a714fe61576b46f27ca2_3.glb',
-    '64f1a714fe61576b46f27ca2_4.glb', 
-    '64f1a714fe61576b46f27ca2_5.glb',
-    '64f1a714fe61576b46f27ca2_6.glb',
-    '64f1a714fe61576b46f27ca2.glb',
-    '64f1a714fe61576b46f27ca222.glb',
+    'avatar1.glb',
+    'avatar2.glb', 
+    'avatar3.glb',
+    'avatar4.glb',
+    'avatar5.glb',
+    'avatar.glb',
   ];
 
   const availableAnimations = [
@@ -54,7 +54,7 @@ const AnimationStudio = () => {
                 <option value="">Choose a model...</option>
                 {availableModels.map(model => (
                   <option key={model} value={model}>
-                    {model.replace('.glb', '').replace('64f1a714fe61576b46f27ca2', 'Avatar')}
+                    {model.replace('.glb', '').replace('avatar', 'Avatar')}
                   </option>
                 ))}
               </select>
@@ -67,7 +67,6 @@ const AnimationStudio = () => {
                 value={selectedAnimation} 
                 onChange={(e) => setSelectedAnimation(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={!selectedModel}
               >
                 <option value="">Choose animation...</option>
                 {availableAnimations.map(animation => (
@@ -76,19 +75,6 @@ const AnimationStudio = () => {
                   </option>
                 ))}
               </select>
-              
-              {selectedModel && !selectedModel.includes('64f1a714fe61576b46f27ca2.glb') && (
-                <p className="mt-2 text-sm text-orange-600">
-                  ⚠️ This model may not be fully compatible with all animations. 
-                  For best results, use "Avatar" model.
-                </p>
-              )}
-              
-              {!selectedModel && (
-                <p className="mt-2 text-sm text-gray-500">
-                  Please select a model first
-                </p>
-              )}
             </div>
 
             {/* Animation Controls */}
@@ -207,10 +193,24 @@ const AvatarModel = ({ modelPath, animationPath, isPlaying, speed }) => {
       // Debug: Log available bones/nodes
       if (nodes) {
         console.log(`Available nodes for ${modelPath}:`, Object.keys(nodes));
-        if (nodes.Hips) {
-          console.log('Hips node found - model should support animations');
+        
+        // Check skeleton compatibility
+        const hasHips = nodes.Hips || nodes.hips;
+        const hasSpine = nodes.Spine || nodes.spine || nodes.Spine1;
+        const hasLeftArm = nodes.LeftArm || nodes.leftArm || nodes['Left_Arm'];
+        const hasRightArm = nodes.RightArm || nodes.rightArm || nodes['Right_Arm'];
+        
+        console.log('Skeleton check:', {
+          hasHips: !!hasHips,
+          hasSpine: !!hasSpine,
+          hasLeftArm: !!hasLeftArm,
+          hasRightArm: !!hasRightArm
+        });
+        
+        if (hasHips && hasSpine) {
+          console.log('✅ Model has good skeleton structure for animations');
         } else {
-          console.warn('No Hips node found - animations may not work');
+          console.warn('⚠️ Model may have limited animation support');
         }
       }
     }
@@ -250,20 +250,86 @@ const AvatarModel = ({ modelPath, animationPath, isPlaying, speed }) => {
             }
             
             try {
-              // Create new action from FBX animation
-              fbxActionRef.current = mixerRef.current.clipAction(fbx.animations[0]);
+              // Clone the animation to avoid affecting the original
+              const animationClone = fbx.animations[0].clone();
               
-              // Configure animation
-              fbxActionRef.current.setLoop(THREE.LoopRepeat);
-              fbxActionRef.current.clampWhenFinished = false;
-              fbxActionRef.current.timeScale = speed;
+              // Try to map animation tracks to available bones
+              const filteredTracks = [];
               
-              if (isPlaying) {
-                fbxActionRef.current.reset().play();
+              animationClone.tracks.forEach(track => {
+                // Extract bone name from track name
+                const trackParts = track.name.split('.');
+                let boneName = trackParts[0]; // Start with first part
+                
+                // Handle different track naming patterns:
+                // "Hips.position" -> "Hips"
+                // "Armature.Hips.position" -> "Hips" 
+                // "mixamo_rig.Hips.position" -> "Hips"
+                if (trackParts.length > 1) {
+                  if (trackParts[0] === 'Armature' || trackParts[0] === 'mixamo_rig' || trackParts[0].includes('rig')) {
+                    boneName = trackParts[1]; // Use second part as bone name
+                  } else {
+                    boneName = trackParts[0]; // Use first part as bone name
+                  }
+                }
+                
+                // Skip tracks for end effectors and constraints that don't exist in model
+                const skipPatterns = [
+                  '_end', '_End', 'IK', 'Constraint', 'Armature001', 'mixamo_rig',
+                  'HeadTop_End', 'LeftEye_end', 'RightEye_end', 'LeftToe_End', 'RightToe_End',
+                  'LeftHandThumb4_end', 'LeftHandIndex4_end', 'LeftHandMiddle4_end', 
+                  'LeftHandRing4_end', 'LeftHandPinky4_end',
+                  'RightHandThumb4_end', 'RightHandIndex4_end', 'RightHandMiddle4_end', 
+                  'RightHandRing4_end', 'RightHandPinky4_end'
+                ];
+                
+                const shouldSkip = skipPatterns.some(pattern => 
+                  boneName.includes(pattern) || track.name.includes(pattern)
+                );
+                
+                if (shouldSkip) {
+                  console.log(`Skipping end effector/constraint track: ${track.name}`);
+                  return;
+                }
+                
+                // Check if this bone exists in the model nodes
+                const boneExists = nodes[boneName] || 
+                                  nodes[boneName.toLowerCase()] || 
+                                  nodes[boneName.charAt(0).toUpperCase() + boneName.slice(1)];
+                
+                if (boneExists) {
+                  filteredTracks.push(track);
+                  console.log(`✅ Keeping track: ${track.name} (bone: ${boneName})`);
+                } else {
+                  console.log(`❌ Skipping track for missing bone: ${track.name} (bone: ${boneName})`);
+                }
+              });
+              
+              // Create animation clip with filtered tracks
+              if (filteredTracks.length > 0) {
+                const compatibleAnimation = new THREE.AnimationClip(
+                  animationClone.name + '_compatible',
+                  animationClone.duration,
+                  filteredTracks
+                );
+                
+                // Create action with compatible animation
+                fbxActionRef.current = mixerRef.current.clipAction(compatibleAnimation);
+                
+                // Configure animation
+                fbxActionRef.current.setLoop(THREE.LoopRepeat);
+                fbxActionRef.current.clampWhenFinished = false;
+                fbxActionRef.current.timeScale = speed;
+                
+                if (isPlaying) {
+                  fbxActionRef.current.reset().play();
+                }
+                
+                setCurrentAnimation('fbx');
+                console.log(`Animation "${animationPath}" loaded with ${filteredTracks.length} compatible tracks for model "${modelPath}"`);
+              } else {
+                throw new Error('No compatible animation tracks found');
               }
-              
-              setCurrentAnimation('fbx');
-              console.log(`Animation "${animationPath}" loaded successfully for model "${modelPath}"`);
             } catch (error) {
               console.warn(`Animation "${animationPath}" not compatible with model "${modelPath}":`, error);
               // Fallback to idle animation

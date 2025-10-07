@@ -115,6 +115,7 @@ const ProfileForm = ({ initialData, onSave, onCancel, loading }) => {
     { value: 'Europe/Paris', label: 'Paris (CET)' },
     { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
     { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
+    { value: 'Asia/Taipei', label: 'Taiwan (CST)' },
     { value: 'Asia/Ho_Chi_Minh', label: 'Ho Chi Minh City (ICT)' },
   ]
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { taskService } from '../../services/api';
+import { formatDateForUser, formatTimeForUser, getCurrentDateInUserTimezone, isToday } from '../../utils/timezone';
 
 const TasksPage = ({ user }) => {
   const navigate = useNavigate();
@@ -89,11 +90,19 @@ const TasksPage = ({ user }) => {
 
   const getTasksForDate = (date) => {
     if (!date) return [];
+    
+    // Get user timezone
+    const userTimezone = user?.personality?.timezone || 'UTC';
+    
+    // Format the selected date
     const dateStr = date.toISOString().split('T')[0];
+    
     return tasks.filter(task => {
       if (!task.dueDate) return false;
-      const taskDate = new Date(task.dueDate).toISOString().split('T')[0];
-      return taskDate === dateStr;
+      
+      // Convert UTC dueDate to user timezone for comparison
+      const taskDateInUserTz = formatDateForUser(task.dueDate, userTimezone);
+      return taskDateInUserTz === dateStr;
     });
   };
 
@@ -141,14 +150,19 @@ const TasksPage = ({ user }) => {
 
   // Day view helper functions
   const getTasksForHour = (date, hour) => {
+    const userTimezone = user?.personality?.timezone || 'UTC';
     const dateStr = date.toISOString().split('T')[0];
+    
     return tasks.filter(task => {
       if (!task.dueDate || !task.dueTime) return false;
-      const taskDate = new Date(task.dueDate).toISOString().split('T')[0];
-      if (taskDate !== dateStr) return false;
       
-      // Parse task time
-      const taskHour = parseInt(task.dueTime.split(':')[0]);
+      // Convert UTC dueDate to user timezone for comparison
+      const taskDateInUserTz = formatDateForUser(task.dueDate, userTimezone);
+      if (taskDateInUserTz !== dateStr) return false;
+      
+      // Convert UTC dueTime to user timezone and parse hour
+      const taskTimeInUserTz = formatTimeForUser(task.dueDate + 'T' + task.dueTime, userTimezone);
+      const taskHour = parseInt(taskTimeInUserTz.split(':')[0]);
       return taskHour === hour;
     });
   };
@@ -441,7 +455,7 @@ const TasksPage = ({ user }) => {
                                       <h4 className="font-medium text-gray-800">{task.title}</h4>
                                       {task.dueTime && (
                                         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                          {task.dueTime}
+                                          {formatTimeForUser(task.dueDate + 'T' + task.dueTime, user?.personality?.timezone || 'UTC')}
                                         </span>
                                       )}
                                     </div>
@@ -494,7 +508,7 @@ const TasksPage = ({ user }) => {
                         <div className="capitalize">Priority: {task.priority}</div>
                         <div className="capitalize">Status: {task.status?.replace('_', ' ')}</div>
                         {task.category && <div className="capitalize">Category: {task.category}</div>}
-                        {task.dueTime && <div>Time: {task.dueTime}</div>}
+                        {task.dueTime && <div>Time: {formatTimeForUser(task.dueDate + 'T' + task.dueTime, user?.personality?.timezone || 'UTC')}</div>}
                       </div>
                     </div>
                   ))}

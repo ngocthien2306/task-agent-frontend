@@ -13,6 +13,7 @@ const TechSettingsStep = ({ data, onChange }) => {
     'Asia/Ho_Chi_Minh',
     'Asia/Bangkok',
     'Asia/Singapore',
+    'Asia/Taipei',
     'Asia/Tokyo',
     'America/New_York',
     'America/Los_Angeles',
@@ -154,7 +155,9 @@ const TechSettingsStep = ({ data, onChange }) => {
         >
           {timezones.map(tz => (
             <option key={tz} value={tz}>
-              {tz.replace('_', ' ')} {tz === 'Asia/Ho_Chi_Minh' && '(Việt Nam)'}
+              {tz.replace('_', ' ')} 
+              {tz === 'Asia/Ho_Chi_Minh' && '(Việt Nam)'}
+              {tz === 'Asia/Taipei' && '(Taiwan)'}
             </option>
           ))}
         </select>

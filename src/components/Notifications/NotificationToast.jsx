@@ -54,6 +54,42 @@ const NotificationToast = ({ user }) => {
     removeNotification(notification.id);
   };
 
+  const handleDisableReminder = async (notification, event) => {
+    event.stopPropagation();
+    
+    try {
+      // Get reminder ID from notification data
+      const reminderId = notification.data?.extra?.reminder_id;
+      if (!reminderId) {
+        console.error('No reminder ID found in notification');
+        return;
+      }
+
+      // Call API to disable socket notifications for this reminder
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/v1/reminders/${reminderId}/disable-socket`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        console.log('✅ Socket notifications disabled for reminder:', reminderId);
+        // Remove the current notification
+        removeNotification(notification.id);
+        // Show success message (optional)
+        alert('Đã tắt thông báo nhắc nhở cho task này');
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      console.error('❌ Failed to disable reminder:', error);
+      alert('Có lỗi khi tắt thông báo. Vui lòng thử lại.');
+    }
+  };
+
   const getPriorityClass = (priority) => {
     switch (priority) {
       case 'high': return 'notification-high';
@@ -143,11 +179,21 @@ const NotificationToast = ({ user }) => {
                 </div>
               )}
 
-              {/* Action button */}
+              {/* Action buttons */}
               <div className="notification-actions">
                 <button className="action-button primary">
                   Xem chi tiết
                 </button>
+                
+                {/* Show "Don't remind again" button for task reminders */}
+                {notification.data?.extra?.notification_type === 'task_reminder' && (
+                  <button 
+                    className="action-button secondary"
+                    onClick={(e) => handleDisableReminder(notification, e)}
+                  >
+                    Không nhắc nữa
+                  </button>
+                )}
               </div>
             </div>
 

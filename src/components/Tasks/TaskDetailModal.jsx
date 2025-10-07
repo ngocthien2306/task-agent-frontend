@@ -17,9 +17,9 @@ const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdated, onTaskDeleted }
     priority: task?.priority || 'medium',
     category: task?.category || 'work',
     status: task?.status || 'pending',
-    due_date: task?.due_date ? task.due_date.split('T')[0] : '',
-    due_time: task?.due_time || '',
-    estimated_duration: task?.estimated_duration || 60
+    due_date: task?.dueDate ? task.dueDate.split('T')[0] : '',
+    due_time: task?.dueTime || '',
+    estimated_duration: task?.estimatedDuration || 60
   });
 
   useEffect(() => {
@@ -30,9 +30,9 @@ const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdated, onTaskDeleted }
         priority: task.priority || 'medium',
         category: task.category || 'work',
         status: task.status || 'pending',
-        due_date: task.due_date ? task.due_date.split('T')[0] : '',
-        due_time: task.due_time || '',
-        estimated_duration: task.estimated_duration || 60
+        due_date: task.dueDate ? task.dueDate.split('T')[0] : '',
+        due_time: task.dueTime || '',
+        estimated_duration: task.estimatedDuration || 60
       });
     }
   }, [task]);
@@ -347,6 +347,65 @@ const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdated, onTaskDeleted }
               <p className="text-red-500 text-xs mt-1">{errors.estimated_duration}</p>
             )}
           </div>
+
+          {/* Reference Links */}
+          {task.referenceLinks && task.referenceLinks.length > 0 && (
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Reference Links
+              </h3>
+              <div className="space-y-2">
+                {task.referenceLinks.map((link, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <svg className="w-3 h-3 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    <a 
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 hover:underline flex-1 truncate"
+                      title={link.url}
+                    >
+                      {link.title}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Subtasks */}
+          {task.subtasks && task.subtasks.length > 0 && (
+            <div className="bg-green-50 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Subtasks & Milestones
+              </h3>
+              <div className="space-y-2">
+                {task.subtasks.map((subtask, index) => (
+                  <div key={index} className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <span className="flex-1 text-gray-700">
+                      {typeof subtask === 'string' ? subtask : subtask.title || subtask}
+                    </span>
+                    {typeof subtask === 'object' && subtask.completed && (
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Task Metadata */}
           <div className="bg-gray-50 rounded-lg p-4">

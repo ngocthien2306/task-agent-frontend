@@ -66,14 +66,18 @@ function App() {
     );
   }
 
+  // Handle reset password route regardless of authentication status
+  if (window.location.pathname === '/reset-password') {
+    return <PasswordReset />;
+  }
+
+  // Handle email verification route regardless of authentication status  
+  if (window.location.pathname === '/verify-email') {
+    return <EmailVerification />;
+  }
+
   if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="/verify-email" element={<EmailVerification />} />
-        <Route path="/reset-password" element={<PasswordReset />} />
-        <Route path="*" element={<AuthScreen />} />
-      </Routes>
-    );
+    return <AuthScreen />;
   }
 
   // Show onboarding if user hasn't completed it or if we can't determine status

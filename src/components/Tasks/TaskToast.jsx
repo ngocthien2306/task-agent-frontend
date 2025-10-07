@@ -143,9 +143,9 @@ export const TaskToast = ({ taskData, onClose }) => {
                       </span>
                     )}
                   </div>
-                  {formatDateTime(task.due_date, task.due_time) && (
+                  {formatDateTime(task.dueDate, task.dueTime) && (
                     <div className="text-xs text-gray-500 mt-1">
-                      📅 {formatDateTime(task.due_date, task.due_time)}
+                      📅 {formatDateTime(task.dueDate, task.dueTime)}
                     </div>
                   )}
                 </div>

@@ -59,11 +59,11 @@ export const useNotifications = (user: User | null): WebSocketHookReturn => {
     try {
       const API_BASE_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
       const savedToken = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/api/v1/notifications/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/notifications/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `bearer ${savedToken}`
+          'Authorization': `Bearer ${savedToken}`
         },
       });
 

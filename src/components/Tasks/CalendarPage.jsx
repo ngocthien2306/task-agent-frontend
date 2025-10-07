@@ -13,10 +13,11 @@ const CalendarPage = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('month'); // 'month', 'day'
+  const [viewMode, setViewMode] = useState('month'); // 'month', 'week', 'day'
   const [contentType, setContentType] = useState('both'); // 'tasks', 'schedules', 'both'
   const [selectedDate, setSelectedDate] = useState(null);
   const [dayViewDate, setDayViewDate] = useState(new Date());
+  const [weekViewDate, setWeekViewDate] = useState(new Date());
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
@@ -172,17 +173,37 @@ const CalendarPage = ({ user }) => {
   const getItemsForDate = (date) => {
     if (!date) return { tasks: [], schedules: [] };
     
-    const dateStr = date.toISOString().split('T')[0];
+    // Format date consistently using local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     
     const dayTasks = tasks.filter(task => {
-      if (!task.dueDate) return false;
-      const taskDate = new Date(task.dueDate).toISOString().split('T')[0];
+      // Use due_date (new format) or fallback to dueDate (old format)
+      const taskDueDate = task.due_date || task.dueDate;
+      if (!taskDueDate) return false;
+      
+      // Parse task date consistently
+      const taskDateObj = new Date(taskDueDate);
+      const taskYear = taskDateObj.getFullYear();
+      const taskMonth = String(taskDateObj.getMonth() + 1).padStart(2, '0');
+      const taskDay = String(taskDateObj.getDate()).padStart(2, '0');
+      const taskDate = `${taskYear}-${taskMonth}-${taskDay}`;
+      
       return taskDate === dateStr;
     });
     
     const daySchedules = schedules.filter(schedule => {
       if (!schedule.scheduled_date) return false;
-      const scheduleDate = new Date(schedule.scheduled_date).toISOString().split('T')[0];
+      
+      // Parse schedule date consistently
+      const scheduleDateObj = new Date(schedule.scheduled_date);
+      const scheduleYear = scheduleDateObj.getFullYear();
+      const scheduleMonth = String(scheduleDateObj.getMonth() + 1).padStart(2, '0');
+      const scheduleDay = String(scheduleDateObj.getDate()).padStart(2, '0');
+      const scheduleDate = `${scheduleYear}-${scheduleMonth}-${scheduleDay}`;
+      
       return scheduleDate === dateStr;
     });
     
@@ -190,20 +211,41 @@ const CalendarPage = ({ user }) => {
   };
 
   const getItemsForHour = (date, hour) => {
-    const dateStr = date.toISOString().split('T')[0];
+    // Format date consistently using local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     
     const hourTasks = tasks.filter(task => {
-      if (!task.dueDate || !task.dueTime) return false;
-      const taskDate = new Date(task.dueDate).toISOString().split('T')[0];
+      // Use due_date and due_time (new format) or fallback to old format
+      const taskDueDate = task.due_date || task.dueDate;
+      const taskDueTime = task.due_time || task.dueTime;
+      if (!taskDueDate || !taskDueTime) return false;
+      
+      // Parse task date consistently
+      const taskDateObj = new Date(taskDueDate);
+      const taskYear = taskDateObj.getFullYear();
+      const taskMonth = String(taskDateObj.getMonth() + 1).padStart(2, '0');
+      const taskDay = String(taskDateObj.getDate()).padStart(2, '0');
+      const taskDate = `${taskYear}-${taskMonth}-${taskDay}`;
+      
       if (taskDate !== dateStr) return false;
       
-      const taskHour = parseInt(task.dueTime.split(':')[0]);
+      const taskHour = parseInt(taskDueTime.split(':')[0]);
       return taskHour === hour;
     });
     
     const hourSchedules = schedules.filter(schedule => {
       if (!schedule.scheduled_date || !schedule.start_time) return false;
-      const scheduleDate = new Date(schedule.scheduled_date).toISOString().split('T')[0];
+      
+      // Parse schedule date consistently
+      const scheduleDateObj = new Date(schedule.scheduled_date);
+      const scheduleYear = scheduleDateObj.getFullYear();
+      const scheduleMonth = String(scheduleDateObj.getMonth() + 1).padStart(2, '0');
+      const scheduleDay = String(scheduleDateObj.getDate()).padStart(2, '0');
+      const scheduleDate = `${scheduleYear}-${scheduleMonth}-${scheduleDay}`;
+      
       if (scheduleDate !== dateStr) return false;
       
       const scheduleHour = parseInt(schedule.start_time.split(':')[0]);
@@ -275,6 +317,40 @@ const CalendarPage = ({ user }) => {
       newDate.setDate(prev.getDate() + direction);
       return newDate;
     });
+  };
+
+  const navigateWeek = (direction) => {
+    setWeekViewDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setDate(prev.getDate() + (direction * 7));
+      return newDate;
+    });
+  };
+
+  const getWeekDays = (date) => {
+    const startOfWeek = new Date(date);
+    const day = startOfWeek.getDay();
+    startOfWeek.setDate(startOfWeek.getDate() - day);
+    
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const currentDay = new Date(startOfWeek);
+      currentDay.setDate(startOfWeek.getDate() + i);
+      weekDays.push(currentDay);
+    }
+    return weekDays;
+  };
+
+  const getWeekRange = (date) => {
+    const weekDays = getWeekDays(date);
+    const startDate = weekDays[0];
+    const endDate = weekDays[6];
+    
+    if (startDate.getMonth() === endDate.getMonth()) {
+      return `${monthNames[startDate.getMonth()]} ${startDate.getDate()}-${endDate.getDate()}, ${startDate.getFullYear()}`;
+    } else {
+      return `${monthNames[startDate.getMonth()]} ${startDate.getDate()} - ${monthNames[endDate.getMonth()]} ${endDate.getDate()}, ${startDate.getFullYear()}`;
+    }
   };
 
   const isToday = (date) => {
@@ -397,6 +473,16 @@ const CalendarPage = ({ user }) => {
                   Month
                 </button>
                 <button
+                  onClick={() => setViewMode('week')}
+                  className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'week' 
+                      ? 'bg-cyan-500 text-white' 
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Week
+                </button>
+                <button
                   onClick={() => setViewMode('day')}
                   className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     viewMode === 'day' 
@@ -464,17 +550,23 @@ const CalendarPage = ({ user }) => {
                   <h2 className="text-xl font-semibold text-gray-800">
                     {viewMode === 'month' 
                       ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`
-                      : dayViewDate.toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })
+                      : viewMode === 'week'
+                        ? getWeekRange(weekViewDate)
+                        : dayViewDate.toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })
                     }
                   </h2>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => viewMode === 'month' ? navigateMonth(-1) : navigateDay(-1)}
+                      onClick={() => {
+                        if (viewMode === 'month') navigateMonth(-1);
+                        else if (viewMode === 'week') navigateWeek(-1);
+                        else navigateDay(-1);
+                      }}
                       className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
                     >
                       <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -486,6 +578,8 @@ const CalendarPage = ({ user }) => {
                         const today = new Date();
                         if (viewMode === 'month') {
                           setCurrentDate(today);
+                        } else if (viewMode === 'week') {
+                          setWeekViewDate(today);
                         } else {
                           setDayViewDate(today);
                         }
@@ -495,7 +589,11 @@ const CalendarPage = ({ user }) => {
                       Today
                     </button>
                     <button
-                      onClick={() => viewMode === 'month' ? navigateMonth(1) : navigateDay(1)}
+                      onClick={() => {
+                        if (viewMode === 'month') navigateMonth(1);
+                        else if (viewMode === 'week') navigateWeek(1);
+                        else navigateDay(1);
+                      }}
                       className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
                     >
                       <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -554,13 +652,16 @@ const CalendarPage = ({ user }) => {
                                     <div
                                       key={`task-${task.id}`}
                                       className={`text-xs p-1 rounded text-white truncate cursor-pointer hover:opacity-80 ${getTaskStatusColor(task.status)}`}
-                                      title={`Task: ${task.title}`}
+                                      title={`Task: ${task.title}${task.referenceLinks && task.referenceLinks.length > 0 ? ' (Has reference links)' : ''}`}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleTaskClick(task);
                                       }}
                                     >
                                       📝 {task.title}
+                                      {task.referenceLinks && task.referenceLinks.length > 0 && (
+                                        <span className="ml-1" title="Has reference links">🔗</span>
+                                      )}
                                     </div>
                                   ))}
                                   {/* Schedules */}
@@ -581,6 +682,97 @@ const CalendarPage = ({ user }) => {
                                 </div>
                               </>
                             )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : viewMode === 'week' ? (
+                  /* Week View */
+                  <>
+                    {/* Day Headers */}
+                    <div className="grid grid-cols-7 gap-1 mb-4">
+                      {dayNames.map(day => (
+                        <div key={day} className="p-3 text-center text-sm font-medium text-gray-500">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Week Days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {getWeekDays(weekViewDate).map((date, index) => {
+                        const { tasks: dayTasks, schedules: daySchedules } = getItemsForDate(date);
+                        const isSelected = selectedDate && 
+                          selectedDate.toDateString() === date.toDateString();
+                        
+                        return (
+                          <div
+                            key={index}
+                            className={`min-h-[200px] p-3 border border-gray-200 rounded-lg cursor-pointer transition-all duration-200 ${
+                              isSelected
+                                ? 'bg-violet-100 border-violet-500'
+                                : isToday(date)
+                                  ? 'bg-violet-50 border-violet-300'
+                                  : 'hover:bg-gray-50'
+                            }`}
+                            onClick={() => setSelectedDate(date)}
+                          >
+                            <div className={`text-lg font-medium mb-3 ${
+                              isToday(date) ? 'text-violet-600' : 'text-gray-700'
+                            }`}>
+                              <div className="text-xs text-gray-500 uppercase">
+                                {dayNames[date.getDay()]}
+                              </div>
+                              <div>
+                                {date.getDate()}
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              {/* Tasks */}
+                              {dayTasks.slice(0, 3).map(task => (
+                                <div
+                                  key={`task-${task.id}`}
+                                  className={`text-xs p-2 rounded text-white cursor-pointer hover:opacity-80 ${getTaskStatusColor(task.status)}`}
+                                  title={`Task: ${task.title}${task.referenceLinks && task.referenceLinks.length > 0 ? ' (Has reference links)' : ''}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTaskClick(task);
+                                  }}
+                                >
+                                  <div className="font-medium truncate">📝 {task.title}</div>
+                                  {(task.due_time || task.dueTime) && (
+                                    <div className="text-xs opacity-90 mt-1">
+                                      {task.due_time || task.dueTime}
+                                    </div>
+                                  )}
+                                  {task.referenceLinks && task.referenceLinks.length > 0 && (
+                                    <span className="text-xs opacity-90" title="Has reference links">🔗</span>
+                                  )}
+                                </div>
+                              ))}
+                              {/* Schedules */}
+                              {daySchedules.slice(0, 3).map(schedule => (
+                                <div
+                                  key={`schedule-${schedule.id}`}
+                                  className={`text-xs p-2 rounded text-white ${getScheduleTypeColor(schedule.type)}`}
+                                  title={`Schedule: ${schedule.title || schedule.description}`}
+                                >
+                                  <div className="font-medium truncate">📅 {schedule.title || schedule.description}</div>
+                                  {schedule.start_time && (
+                                    <div className="text-xs opacity-90 mt-1">
+                                      {schedule.start_time}
+                                      {schedule.end_time && ` - ${schedule.end_time}`}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {(dayTasks.length + daySchedules.length) > 6 && (
+                                <div className="text-xs text-gray-500 bg-gray-100 p-1 rounded text-center">
+                                  +{(dayTasks.length + daySchedules.length) - 6} more
+                                </div>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -621,9 +813,9 @@ const CalendarPage = ({ user }) => {
                                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">TASK</span>
                                       <div className={`w-3 h-3 rounded-full ${getTaskStatusColor(task.status)}`}></div>
                                       <h4 className="font-medium text-gray-800">{task.title}</h4>
-                                      {task.dueTime && (
+                                      {(task.due_time || task.dueTime) && (
                                         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                          {task.dueTime}
+                                          {task.due_time || task.dueTime}
                                         </span>
                                       )}
                                     </div>
@@ -631,6 +823,16 @@ const CalendarPage = ({ user }) => {
                                       <span className="capitalize">Status: {task.status?.replace('_', ' ')}</span>
                                       <span className="capitalize">Priority: {task.priority}</span>
                                       {task.category && <span className="capitalize">Category: {task.category}</span>}
+                                      {task.referenceLinks && task.referenceLinks.length > 0 && (
+                                        <span className="text-blue-600 flex items-center gap-1">
+                                          🔗 {task.referenceLinks.length} link{task.referenceLinks.length > 1 ? 's' : ''}
+                                        </span>
+                                      )}
+                                      {task.subtasks && task.subtasks.length > 0 && (
+                                        <span className="text-green-600 flex items-center gap-1">
+                                          ✅ {task.subtasks.length} step{task.subtasks.length > 1 ? 's' : ''}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 ))}
@@ -680,7 +882,7 @@ const CalendarPage = ({ user }) => {
           {/* Side Panel */}
           <div className="lg:col-span-1 space-y-6">
             {/* Selected Date Items or Day View Summary */}
-            {viewMode === 'month' && selectedDate ? (
+            {(viewMode === 'month' || viewMode === 'week') && selectedDate ? (
               <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
                   {selectedDate.toLocaleDateString('en-US', { 
@@ -709,7 +911,13 @@ const CalendarPage = ({ user }) => {
                             <div className="space-y-1 text-xs text-gray-600">
                               <div className="capitalize">Status: {task.status?.replace('_', ' ')}</div>
                               <div className="capitalize">Priority: {task.priority}</div>
-                              {task.dueTime && <div>Time: {task.dueTime}</div>}
+                              {(task.due_time || task.dueTime) && <div>Time: {task.due_time || task.dueTime}</div>}
+                              {task.referenceLinks && task.referenceLinks.length > 0 && (
+                                <div className="text-blue-600">🔗 {task.referenceLinks.length} reference link{task.referenceLinks.length > 1 ? 's' : ''}</div>
+                              )}
+                              {task.subtasks && task.subtasks.length > 0 && (
+                                <div className="text-green-600">✅ {task.subtasks.length} subtask{task.subtasks.length > 1 ? 's' : ''}</div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -743,7 +951,82 @@ const CalendarPage = ({ user }) => {
                   })()}
                 </div>
               </div>
-            ) : viewMode === 'day' && (
+            ) : viewMode === 'week' ? (
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Week Summary
+                </h3>
+                <div className="space-y-3">
+                  {(() => {
+                    const weekDays = getWeekDays(weekViewDate);
+                    let totalTasks = 0;
+                    let totalSchedules = 0;
+                    
+                    weekDays.forEach(date => {
+                      const { tasks: dayTasks, schedules: daySchedules } = getItemsForDate(date);
+                      totalTasks += dayTasks.length;
+                      totalSchedules += daySchedules.length;
+                    });
+                    
+                    return (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Total Items</span>
+                          <span className="font-semibold text-gray-800">
+                            {totalTasks + totalSchedules}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Tasks</span>
+                          <span className="font-semibold text-blue-600">{totalTasks}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Schedule Entries</span>
+                          <span className="font-semibold text-purple-600">{totalSchedules}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Week Range</span>
+                          <span className="font-semibold text-cyan-600 text-xs">
+                            {getWeekRange(weekViewDate)}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                  
+                  {/* Quick Actions for Week View */}
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Quick Actions</h4>
+                    <div className="space-y-2">
+                      <button 
+                        onClick={() => {
+                          setViewMode('month');
+                          setCurrentDate(new Date(weekViewDate.getFullYear(), weekViewDate.getMonth(), 1));
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-violet-600 hover:bg-violet-50 rounded-lg transition-colors duration-200"
+                      >
+                        📅 Switch to Month View
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setViewMode('day');
+                          setDayViewDate(weekViewDate);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                      >
+                        📋 Switch to Day View
+                      </button>
+                      <button 
+                        onClick={() => setWeekViewDate(new Date())}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                      >
+                        🏠 Go to This Week
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : viewMode === 'day' ? (
               <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
                   Day Summary
@@ -786,6 +1069,15 @@ const CalendarPage = ({ user }) => {
                         📅 Switch to Month View
                       </button>
                       <button 
+                        onClick={() => {
+                          setViewMode('week');
+                          setWeekViewDate(dayViewDate);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors duration-200"
+                      >
+                        📊 Switch to Week View
+                      </button>
+                      <button 
                         onClick={() => setDayViewDate(new Date())}
                         className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
@@ -795,7 +1087,7 @@ const CalendarPage = ({ user }) => {
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Overall Stats Card */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">

@@ -40,14 +40,66 @@ export class NotificationService {
     }
   }
 
-  removeNotification(notificationId: string) {
+  async removeNotification(notificationId: string): Promise<boolean> {
+    // Remove from local state immediately
     this.notifications = this.notifications.filter(n => n.id !== notificationId);
     this.notifyListeners();
+
+    // Also remove from backend if it's a stored notification
+    try {
+      const API_BASE_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+      const savedToken = localStorage.getItem("token");
+      
+      const response = await fetch(`${API_BASE_URL}/api/v1/notifications/${notificationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${savedToken}`
+        },
+      });
+
+      if (response.ok) {
+        console.log('✅ Notification deleted from backend:', notificationId);
+        return true;
+      } else {
+        console.error('❌ Failed to delete notification from backend:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error deleting notification from backend:', error);
+      return false;
+    }
   }
 
-  clearAllNotifications() {
+  async clearAllNotifications(): Promise<boolean> {
+    // Clear local state immediately
     this.notifications = [];
     this.notifyListeners();
+
+    // Also clear from backend
+    try {
+      const API_BASE_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+      const savedToken = localStorage.getItem("token");
+      
+      const response = await fetch(`${API_BASE_URL}/api/v1/notifications/clear`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${savedToken}`
+        },
+      });
+
+      if (response.ok) {
+        console.log('✅ All notifications cleared from backend');
+        return true;
+      } else {
+        console.error('❌ Failed to clear all notifications from backend:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error clearing all notifications from backend:', error);
+      return false;
+    }
   }
 
   getNotifications(): Notification[] {

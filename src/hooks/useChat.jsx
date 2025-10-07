@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 import { profileService } from "../services/api";
+import { useSubscription } from "./useSubscription";
 
 const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY;
@@ -17,7 +18,9 @@ export const ChatProvider = ({ children }) => {
   const [isListening, setListeningAnimation] = useState(false);
   const [taskData, setTaskData] = useState(null); // For task toast display
   const [userProfile, setUserProfile] = useState(null); // Cache user profile
+  const [subscriptionLimitExceeded, setSubscriptionLimitExceeded] = useState(null); // Track subscription limits
   const { user, authFetch } = useAuth(); // Get current user from auth context
+  const { checkCanProceed, loadSubscription } = useSubscription(); // Get subscription functions
 
   // Function to process text with OpenAI API
   const processWithOpenAI = async (text) => {
@@ -124,8 +127,39 @@ export const ChatProvider = ({ children }) => {
     }
 
     setLoading(true);
+    setSubscriptionLimitExceeded(null); // Clear previous limit errors
     
     try {
+      // Check subscription limits before proceeding
+      console.log('🔒 Checking subscription limits before chat...');
+      const limitCheck = await checkCanProceed(1000); // Estimate 1000 tokens
+      
+      if (!limitCheck.can_proceed) {
+        console.log('❌ Subscription limit exceeded:', limitCheck.reason);
+        
+        // Set subscription limit error for UI to handle
+        setSubscriptionLimitExceeded({
+          reason: limitCheck.reason,
+          suggested_action: limitCheck.suggested_action,
+          subscription: limitCheck.subscription
+        });
+        
+        // Add limit exceeded message
+        setMessages((messages) => [
+          ...messages,
+          {
+            text: limitCheck.reason.includes('token') 
+              ? "Bạn đã sử dụng hết quota tokens. Vui lòng nâng cấp gói để tiếp tục chat."
+              : "Bạn đã đạt giới hạn requests. Vui lòng nâng cấp gói để tiếp tục.",
+            facialExpression: "concerned",
+            animation: "Talking_0"
+          }
+        ]);
+        
+        return; // Don't proceed with chat
+      }
+      
+      console.log('✅ Subscription check passed, proceeding with chat...');
       // Get user profile from localStorage or use cached
       let currentUserProfile = userProfile;
       if (!currentUserProfile) {
@@ -224,6 +258,33 @@ export const ChatProvider = ({ children }) => {
         body: JSON.stringify(requestBody),
       });
       
+      // Handle subscription limit errors from backend
+      if (data.status === 429) {
+        const errorData = await data.json().catch(() => ({}));
+        
+        if (errorData.error === 'subscription_limit_exceeded') {
+          console.log('❌ Backend returned subscription limit exceeded:', errorData);
+          
+          setSubscriptionLimitExceeded({
+            reason: errorData.details?.reason || 'Subscription limit exceeded',
+            suggested_action: errorData.details?.suggested_action || 'upgrade_plan',
+            subscription: errorData.details?.subscription
+          });
+          
+          // Add limit exceeded message
+          setMessages((messages) => [
+            ...messages,
+            {
+              text: errorData.message || "Bạn đã đạt giới hạn subscription. Vui lòng nâng cấp gói để tiếp tục.",
+              facialExpression: "concerned",
+              animation: "Talking_0"
+            }
+          ]);
+          
+          return; // Don't continue processing
+        }
+      }
+      
       if (!data.ok) {
         throw new Error(`HTTP error! status: ${data.status}`);
       }
@@ -262,6 +323,10 @@ export const ChatProvider = ({ children }) => {
 
   const onTaskToastClose = () => {
     setTaskData(null);
+  };
+
+  const onSubscriptionLimitClose = () => {
+    setSubscriptionLimitExceeded(null);
   };
 
   const toggleAiModel = () => {
@@ -310,7 +375,9 @@ export const ChatProvider = ({ children }) => {
         taskData,
         onTaskToastClose,
         userProfile,
-        refreshUserProfile
+        refreshUserProfile,
+        subscriptionLimitExceeded,
+        onSubscriptionLimitClose
       }}
     >
       {children}

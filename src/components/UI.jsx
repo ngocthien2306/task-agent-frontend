@@ -6,11 +6,15 @@ import { useChat } from "../hooks/useChat";
 import { CherryBlossomFalling } from "./Animations/CherryBlossomFalling";
 import Profile from "./Profile/Profile";
 import { TaskToast } from "./Tasks/TaskToast";
+import { SubscriptionLimitBanner } from "./Subscription/SubscriptionLimitBanner";
+import { SubscriptionStatus } from "./Subscription/SubscriptionStatus";
+import { useSubscription } from "../hooks/useSubscription";
 
 export const UI = ({ hidden, user, onLogout }) => {
   const input = useRef();
   const navigate = useNavigate();
-  const { chat, loading, cameraZoomed, setCameraZoomed, message, setListeningAnimation, taskData, onTaskToastClose } = useChat();
+  const { chat, loading, cameraZoomed, setCameraZoomed, message, setListeningAnimation, taskData, onTaskToastClose, subscriptionLimitExceeded, onSubscriptionLimitClose } = useChat();
+  const { refresh: refreshSubscription } = useSubscription();
   const [isListening, setIsListening] = useState(false);
   const [speechRecognition, setSpeechRecognition] = useState(null);
   const [speechLanguage, setSpeechLanguage] = useState('auto'); // Auto-detect language
@@ -386,6 +390,16 @@ export const UI = ({ hidden, user, onLogout }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5V18M15 7.5V18M3 16.811V8.69c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 010 1.953l-7.108 4.061A1.125 1.125 0 013 16.811z" />
                 </svg>
               </Button>
+
+              <Button
+                onClick={() => navigate('/subscription')}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                title="Subscription Management"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                </svg>
+              </Button>
             </div>
 
             {/* Camera Control */}
@@ -514,6 +528,17 @@ export const UI = ({ hidden, user, onLogout }) => {
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5V18M15 7.5V18M3 16.811V8.69c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 010 1.953l-7.108 4.061A1.125 1.125 0 013 16.811z" />
+              </svg>
+            </Button>
+
+            <Button
+              onClick={() => navigate('/subscription')}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              title="Subscription Management"
+              size="w-10 h-10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
               </svg>
             </Button>
 
@@ -658,6 +683,22 @@ export const UI = ({ hidden, user, onLogout }) => {
 
       {/* Task Toast */}
       <TaskToast taskData={taskData} onClose={onTaskToastClose} />
+
+      {/* Subscription Limit Banner */}
+      {subscriptionLimitExceeded && (
+        <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto">
+          <SubscriptionLimitBanner
+            limitInfo={subscriptionLimitExceeded}
+            onClose={onSubscriptionLimitClose}
+            onPlanSelected={async (subscription) => {
+              // Refresh subscription data and close limit banner
+              await refreshSubscription();
+              onSubscriptionLimitClose();
+            }}
+            compact={true}
+          />
+        </div>
+      )}
     </>
   );
 };

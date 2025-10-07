@@ -18,6 +18,7 @@ const NotificationToast = ({ user }) => {
   } = useWebSocket(user);
 
   const [visibleNotifications, setVisibleNotifications] = useState([]);
+  const [toastMessages, setToastMessages] = useState([]);
 
   // Show only recent notifications as toasts
   useEffect(() => {
@@ -31,14 +32,14 @@ const NotificationToast = ({ user }) => {
     console.log('🔔 NotificationToast: recent unread notifications', recentNotifications);
     setVisibleNotifications(recentNotifications);
 
-    // Auto-hide notifications after 10 seconds
+    // Auto-hide notifications after 10 seconds (only hide from UI, don't delete from database)
     recentNotifications.forEach(notification => {
       setTimeout(() => {
-        console.log('🔔 NotificationToast: auto-removing notification', notification.id);
-        removeNotification(notification.id);
+        console.log('🔔 NotificationToast: auto-hiding notification', notification.id);
+        hideNotification(notification.id); // Just hide from UI
       }, 10000);
     });
-  }, [notifications, removeNotification]);
+  }, [notifications, markAsRead]);
 
   const handleNotificationClick = (notification) => {
     markAsRead(notification.id);
@@ -49,17 +50,41 @@ const NotificationToast = ({ user }) => {
     }
   };
 
+  // Show toast message
+  const showToast = (message, type = 'info') => {
+    const toastId = Date.now();
+    const toast = {
+      id: toastId,
+      message,
+      type, // 'success', 'error', 'info', 'warning'
+      timestamp: new Date().toISOString()
+    };
+    
+    setToastMessages(prev => [...prev, toast]);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+      setToastMessages(prev => prev.filter(t => t.id !== toastId));
+    }, 3000);
+  };
+
+  // Hide notification from UI only (don't delete from database)
+  const hideNotification = (notificationId) => {
+    markAsRead(notificationId); // Mark as read but keep in database
+  };
+
   const handleDismiss = (notification, event) => {
     event.stopPropagation();
-    removeNotification(notification.id);
+    hideNotification(notification.id); // Just hide, don't delete
   };
 
   const handleDisableReminder = async (notification, event) => {
     event.stopPropagation();
     
     try {
-      // Get reminder ID from notification data
-      const reminderId = notification.data?.extra?.reminder_id;
+      // Get reminder ID from toast data first, then fallback to notification data
+      const reminderId = notification.toast?.reminder?.reminder_id || 
+                         notification.data?.extra?.reminder_id;
       if (!reminderId) {
         console.error('No reminder ID found in notification');
         return;
@@ -67,7 +92,8 @@ const NotificationToast = ({ user }) => {
 
       // Call API to disable socket notifications for this reminder
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/v1/reminders/${reminderId}/disable-socket`, {
+      const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${pythonApiUrl}/api/v1/reminders/${reminderId}/disable-socket`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -77,16 +103,17 @@ const NotificationToast = ({ user }) => {
 
       if (response.ok) {
         console.log('✅ Socket notifications disabled for reminder:', reminderId);
-        // Remove the current notification
-        removeNotification(notification.id);
-        // Show success message (optional)
-        alert('Đã tắt thông báo nhắc nhở cho task này');
+        // Hide the current notification from UI
+        hideNotification(notification.id);
+        // Show success toast
+        showToast('✅ Đã tắt thông báo nhắc nhở cho task này', 'success');
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
     } catch (error) {
       console.error('❌ Failed to disable reminder:', error);
-      alert('Có lỗi khi tắt thông báo. Vui lòng thử lại.');
+      showToast('❌ Có lỗi khi tắt thông báo. Vui lòng thử lại.', 'error');
     }
   };
 
@@ -116,6 +143,28 @@ const NotificationToast = ({ user }) => {
         <span className="connection-text">
           {isConnected ? 'Kết nối' : 'Mất kết nối'}
         </span>
+      </div>
+
+      {/* Toast Messages */}
+      <div className="toast-container">
+        {toastMessages.map((toast, index) => (
+          <div
+            key={toast.id}
+            className={`toast-message toast-${toast.type}`}
+            style={{ 
+              top: `${80 + (index * 60)}px`,
+              animationDelay: `${index * 0.1}s`
+            }}
+          >
+            <span className="toast-content">{toast.message}</span>
+            <button
+              className="toast-close"
+              onClick={() => setToastMessages(prev => prev.filter(t => t.id !== toast.id))}
+            >
+              ×
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Notification Counter */}
@@ -152,7 +201,7 @@ const NotificationToast = ({ user }) => {
               <div className="notification-header">
                 <span className="notification-title">{notification.title}</span>
                 <span className="notification-time">
-                  {formatTime(notification.timestamp)}
+                  {notification.toast?.formatted_time || formatTime(notification.timestamp)}
                 </span>
               </div>
               
@@ -160,22 +209,64 @@ const NotificationToast = ({ user }) => {
                 {notification.body}
               </div>
 
-              {/* Task details */}
-              {notification.task && (
+              {/* Enhanced Task details with toast information */}
+              {(notification.task || notification.toast?.task) && (
                 <div className="notification-task">
-                  <div className="task-priority">
-                    <span className={`priority-badge priority-${notification.task.priority}`}>
-                      {notification.task.priority === 'high' ? 'Cao' : 
-                       notification.task.priority === 'medium' ? 'Trung bình' : 'Thấp'}
-                    </span>
-                  </div>
-                  
-                  {notification.task.due_date && (
-                    <div className="task-due">
-                      📅 {new Date(notification.task.due_date).toLocaleDateString('vi-VN')}
-                      {notification.task.due_time && ` ${notification.task.due_time}`}
-                    </div>
-                  )}
+                  {/* Use toast task info if available, fallback to notification.task */}
+                  {(() => {
+                    const taskInfo = notification.toast?.task || notification.task;
+                    return (
+                      <>
+                        <div className="task-info-row">
+                          <div className="task-priority">
+                            <span className={`priority-badge priority-${taskInfo.priority}`}>
+                              {taskInfo.priority === 'high' ? '🔴 Cao' : 
+                               taskInfo.priority === 'medium' ? '🟡 Trung bình' : '🟢 Thấp'}
+                            </span>
+                          </div>
+                          
+                          {taskInfo.category && (
+                            <div className="task-category">
+                              📂 {taskInfo.category}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {taskInfo.due_date && (
+                          <div className="task-due">
+                            📅 {notification.toast?.formatted_date || 
+                                 new Date(taskInfo.due_date).toLocaleDateString('vi-VN')}
+                            {taskInfo.due_time && ` ⏰ ${taskInfo.due_time}`}
+                          </div>
+                        )}
+
+                        {/* Reminder details if available */}
+                        {notification.toast?.reminder && (
+                          <div className="reminder-details">
+                            {notification.toast.reminder.before_due && (
+                              <div className="reminder-timing">
+                                ⏱️ Nhắc trước: {notification.toast.reminder.before_due}
+                              </div>
+                            )}
+                            {notification.toast.reminder.reminder_message && (
+                              <div className="reminder-message">
+                                💬 "{notification.toast.reminder.reminder_message}"
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Task status */}
+                        <div className="task-status">
+                          <span className={`status-badge status-${taskInfo.status}`}>
+                            {taskInfo.status === 'pending' ? '⏳ Đang chờ' :
+                             taskInfo.status === 'in_progress' ? '🔄 Đang làm' :
+                             taskInfo.status === 'completed' ? '✅ Hoàn thành' : '❌ Đã hủy'}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -185,8 +276,9 @@ const NotificationToast = ({ user }) => {
                   Xem chi tiết
                 </button>
                 
-                {/* Show "Don't remind again" button for task reminders */}
-                {notification.data?.extra?.notification_type === 'task_reminder' && (
+                {/* Show "Don't remind again" button for task reminders with reminder ID */}
+                {(notification.data?.extra?.notification_type === 'task_reminder' || 
+                  notification.toast?.reminder?.reminder_id) && (
                   <button 
                     className="action-button secondary"
                     onClick={(e) => handleDisableReminder(notification, e)}

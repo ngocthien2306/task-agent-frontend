@@ -16,6 +16,19 @@ export interface NotificationAction {
   url: string;
 }
 
+export interface ToastDetails {
+  show_details: boolean;
+  task?: Task;
+  reminder?: {
+    before_due?: string;
+    reminder_message?: string;
+    reminder_id?: string;
+  };
+  timestamp?: string;
+  formatted_time?: string;
+  formatted_date?: string;
+}
+
 export interface Notification {
   id: string;
   title: string;
@@ -26,6 +39,8 @@ export interface Notification {
   isRead: boolean;
   task?: Task;
   action?: NotificationAction;
+  toast?: ToastDetails;
+  data?: any;
 }
 
 export interface ConnectionInfo {

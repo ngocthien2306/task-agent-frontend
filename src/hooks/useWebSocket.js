@@ -162,11 +162,49 @@ export const useWebSocket = (user) => {
   }, []);
 
   // Remove specific notification
-  const removeNotification = useCallback((notificationId) => {
+  const removeNotification = useCallback(async (notificationId) => {
+    console.log('🗑️ removeNotification called with ID:', notificationId);
+    const notification = notifications.find(n => n.id === notificationId);
+    console.log('🔍 Found notification:', notification);
+    
+    // Remove from local state immediately
     setNotifications(prev => 
       prev.filter(notification => notification.id !== notificationId)
     );
-  }, []);
+    
+    // If it's a stored notification, delete via API
+    if (notification && notification.stored && notification.id) {
+      console.log('📡 Attempting to delete from database...');
+      try {
+        const token = localStorage.getItem('token');
+        console.log('🔑 Token found:', !!token);
+        
+        const response = await fetch(`http://localhost:8000/api/v1/notifications/${notification.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('📡 API Response status:', response.status);
+        
+        if (response.ok) {
+          console.log('✅ Notification deleted from database:', notificationId);
+        } else {
+          console.error('❌ API returned error:', response.status, await response.text());
+        }
+      } catch (error) {
+        console.error('❌ Failed to delete notification from database:', error);
+      }
+    } else {
+      console.log('ℹ️ Notification not stored in database or missing fields:', {
+        hasNotification: !!notification,
+        hasStoredField: notification?.stored,
+        hasId: notification?.id
+      });
+    }
+  }, [notifications]);
 
   // Send message to server
   const sendMessage = useCallback((message) => {

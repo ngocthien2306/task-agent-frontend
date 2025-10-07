@@ -69,6 +69,7 @@ export const useNotifications = (user: User | null): WebSocketHookReturn => {
 
       if (response.ok) {
         const data = await response.json();
+        // debugger;
         const storedNotifications: Notification[] = data.notifications.map((notif: any) => ({
           id: notif.id,
           title: notif.title,
@@ -76,9 +77,11 @@ export const useNotifications = (user: User | null): WebSocketHookReturn => {
           type: notif.type,
           timestamp: notif.created_at,
           receivedAt: notif.created_at,
-          isRead: notif.is_read,
+          isRead: notif.status === 'read',
           task: notif.data?.task,
-          action: notif.action
+          action: notif.action,
+          stored: true,  // Mark as stored notification
+          data: notif.data  // Include full data for reminder handling
         }));
 
         notificationService.setNotifications(storedNotifications);

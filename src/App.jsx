@@ -12,6 +12,7 @@ import CalendarPage from "./components/Tasks/CalendarPage";
 import NotificationToast from "./components/Notifications/NotificationToast";
 import { NotificationsPage } from "./features/notifications";
 import AnimationStudio from "./pages/AnimationStudio";
+import { SubscriptionPage } from "./components/Subscription/SubscriptionPage";
 import { useAuth } from "./hooks/useAuth";
 import { useState, useEffect } from "react";
 
@@ -124,6 +125,7 @@ function App() {
         <Route path="/calendar" element={<CalendarPage user={user} />} />
         <Route path="/notifications" element={<NotificationsPage user={user} />} />
         <Route path="/animation-studio" element={<AnimationStudio />} />
+        <Route path="/subscription" element={<SubscriptionPage />} />
       </Routes>
     </>
   );

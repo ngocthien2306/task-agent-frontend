@@ -170,15 +170,21 @@ class WebSocketService {
    * @param {Object} message - Task notification message
    */
   handleTaskNotification(message) {
-    // Create a notification event that the UI can listen to
+    console.log('📋 Processing task notification with full data:', message);
+    
+    // Create a notification event that the UI can listen to with full toast details
     const notificationEvent = new CustomEvent('taskNotification', {
       detail: {
+        id: message.id,
         title: message.title,
         body: message.body,
         task: message.task,
         action: message.action,
         timestamp: message.timestamp,
-        type: message.notification_type
+        type: message.notification_type || message.type,
+        data: message.data,  // Include full data object
+        toast: message.toast,  // Include toast details from backend
+        stored: message.stored
       }
     });
 

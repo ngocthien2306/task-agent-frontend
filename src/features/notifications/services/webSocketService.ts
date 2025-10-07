@@ -67,7 +67,9 @@ export class WebSocketService {
               receivedAt: new Date().toISOString(),
               isRead: false,
               task: data.task,
-              action: data.action
+              action: data.action,
+              toast: data.toast,  // Include toast details from backend
+              data: data.data     // Include full data object
             };
 
             this.notificationService.addNotification(notification);

@@ -20,6 +20,21 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user }) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo | null>(null);
+  const [toastMessages, setToastMessages] = useState<Array<{
+    id: number;
+    message: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    timestamp: string;
+  }>>([]);
+  
+  const [confirmDialog, setConfirmDialog] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+    type: 'danger' | 'warning' | 'info';
+  } | null>(null);
 
   const {
     notifications,
@@ -33,6 +48,46 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user }) => {
     getConnectionInfo,
     fetchStoredNotifications
   } = useNotifications(user);
+
+  // Toast function
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    const toastId = Date.now();
+    const toast = {
+      id: toastId,
+      message,
+      type,
+      timestamp: new Date().toISOString()
+    };
+    
+    setToastMessages(prev => [...prev, toast]);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+      setToastMessages(prev => prev.filter(t => t.id !== toastId));
+    }, 3000);
+  };
+
+  // Confirm dialog function
+  const showConfirmDialog = (
+    title: string,
+    message: string, 
+    onConfirm: () => void,
+    type: 'danger' | 'warning' | 'info' = 'warning'
+  ) => {
+    setConfirmDialog({
+      show: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog(null);
+      },
+      onCancel: () => {
+        setConfirmDialog(null);
+      },
+      type
+    });
+  };
 
   // Get detailed connection info
   useEffect(() => {
@@ -62,10 +117,128 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user }) => {
     });
   };
 
+  // Enhanced handlers with custom popup and toast feedback
+  const handleRemoveNotification = async (notificationId: string) => {
+    showConfirmDialog(
+      'Xóa thông báo',
+      'Bạn có chắc chắn muốn xóa thông báo này không? Hành động này không thể hoàn tác.',
+      async () => {
+        try {
+          await removeNotification(notificationId);
+          showToast('✅ Đã xóa thông báo thành công', 'success');
+        } catch (error) {
+          console.error('Error removing notification:', error);
+          showToast('❌ Có lỗi khi xóa thông báo', 'error');
+        }
+      },
+      'danger'
+    );
+  };
+
+  const handleClearAllNotifications = async () => {
+    if (notifications.length === 0) {
+      showToast('📭 Không có thông báo nào để xóa', 'info');
+      return;
+    }
+
+    showConfirmDialog(
+      'Xóa tất cả thông báo',
+      `Bạn có chắc chắn muốn xóa tất cả ${notifications.length} thông báo không? Hành động này không thể hoàn tác.`,
+      async () => {
+        try {
+          await clearNotifications();
+          showToast('✅ Đã xóa tất cả thông báo thành công', 'success');
+        } catch (error) {
+          console.error('Error clearing notifications:', error);
+          showToast('❌ Có lỗi khi xóa tất cả thông báo', 'error');
+        }
+      },
+      'danger'
+    );
+  };
+
   const readCount = notifications.length - unreadCount;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+      {/* Toast Messages */}
+      <div className="fixed top-20 right-6 z-50 space-y-2">
+        {toastMessages.map((toast, index) => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg backdrop-blur-sm text-white font-medium text-sm min-w-[300px] max-w-[400px] transform transition-all duration-300 ease-out animate-in slide-in-from-right ${
+              toast.type === 'success' ? 'bg-green-500/90 border-l-4 border-green-400' :
+              toast.type === 'error' ? 'bg-red-500/90 border-l-4 border-red-400' :
+              toast.type === 'warning' ? 'bg-yellow-500/90 border-l-4 border-yellow-400' :
+              'bg-blue-500/90 border-l-4 border-blue-400'
+            }`}
+            style={{ 
+              animationDelay: `${index * 0.1}s`
+            }}
+          >
+            <span className="flex-1">{toast.message}</span>
+            <button
+              onClick={() => setToastMessages(prev => prev.filter(t => t.id !== toast.id))}
+              className="text-white/70 hover:text-white text-lg font-bold w-5 h-5 flex items-center justify-center"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Confirm Dialog */}
+      {confirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  confirmDialog.type === 'danger' ? 'bg-red-100' :
+                  confirmDialog.type === 'warning' ? 'bg-yellow-100' : 'bg-blue-100'
+                }`}>
+                  <span className="text-2xl">
+                    {confirmDialog.type === 'danger' ? '🗑️' :
+                     confirmDialog.type === 'warning' ? '⚠️' : 'ℹ️'}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {confirmDialog.title}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Message */}
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                {confirmDialog.message}
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={confirmDialog.onCancel}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  onClick={confirmDialog.onConfirm}
+                  className={`px-4 py-2 text-white rounded-lg font-medium transition-colors ${
+                    confirmDialog.type === 'danger' ? 'bg-red-500 hover:bg-red-600' :
+                    confirmDialog.type === 'warning' ? 'bg-yellow-500 hover:bg-yellow-600' : 
+                    'bg-blue-500 hover:bg-blue-600'
+                  }`}
+                >
+                  {confirmDialog.type === 'danger' ? 'Xóa' : 'Xác nhận'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -107,7 +280,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user }) => {
           readCount={readCount}
           onFilterChange={setFilter}
           onRefresh={fetchStoredNotifications}
-          onClearAll={clearNotifications}
+          onClearAll={handleClearAllNotifications}
         />
 
         {/* Notifications List */}
@@ -117,7 +290,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user }) => {
             filter={filter}
             onNotificationClick={handleNotificationClick}
             onMarkAsRead={markAsRead}
-            onRemove={removeNotification}
+            onRemove={handleRemoveNotification}
           />
         </div>
 

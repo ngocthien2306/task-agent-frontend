@@ -161,6 +161,79 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+      {/* Top Navigation Bar */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left - Back Navigation */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/')}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors rounded-lg hover:bg-white/50"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Về trang chính
+              </button>
+              <div className="h-6 w-px bg-gray-300"></div>
+              <nav className="hidden sm:flex space-x-6">
+                <button
+                  onClick={() => navigate('/calendar')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Calendar
+                </button>
+                <button
+                  onClick={() => navigate('/subscription')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Subscription
+                </button>
+                <button
+                  onClick={() => navigate('/animation-studio')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Animation Studio
+                </button>
+              </nav>
+            </div>
+
+            {/* Center - Title */}
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+              <h1 className="text-lg font-semibold text-gray-900 flex items-center">
+                <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                Thông báo
+              </h1>
+            </div>
+
+            {/* Right - Actions */}
+            <div className="flex items-center space-x-3">
+              {/* Connection Status */}
+              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm ${
+                isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span>
+                  {isConnected ? 'Đã kết nối' : 'Mất kết nối'}
+                </span>
+              </div>
+              <button 
+                onClick={testConnection} 
+                className="inline-flex items-center p-2 text-gray-500 hover:text-blue-600 hover:bg-white/50 rounded-lg transition-colors"
+                title="Test kết nối"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Toast Messages */}
       <div className="fixed top-20 right-6 z-50 space-y-2">
         {toastMessages.map((toast, index) => (
@@ -240,30 +313,6 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ user }) => {
       )}
 
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/calendar')}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-              >
-                <span>←</span>
-                <span>Quay lại</span>
-              </button>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-                📬 Quản lý thông báo
-              </h1>
-            </div>
-          </div>
-
-          {/* Connection Status */}
-          <ConnectionStatus
-            isConnected={isConnected}
-            connectionInfo={connectionInfo}
-            onTestConnection={testConnection}
-          />
-        </div>
 
         {/* Stats */}
         <NotificationStats

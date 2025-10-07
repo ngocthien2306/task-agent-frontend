@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -6,6 +7,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import * as THREE from 'three';
 
 const AnimationStudio = () => {
+  const navigate = useNavigate();
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedAnimation, setSelectedAnimation] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -36,9 +38,67 @@ const AnimationStudio = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Animation Studio</h1>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      {/* Top Navigation Bar */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left - Back Navigation */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/')}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors rounded-lg hover:bg-white/50"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Về trang chính
+              </button>
+              <div className="h-6 w-px bg-gray-300"></div>
+              <nav className="hidden sm:flex space-x-6">
+                <button
+                  onClick={() => navigate('/calendar')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Calendar
+                </button>
+                <button
+                  onClick={() => navigate('/notifications')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Thông báo
+                </button>
+                <button
+                  onClick={() => navigate('/subscription')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Subscription
+                </button>
+              </nav>
+            </div>
+
+            {/* Center - Title */}
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+              <h1 className="text-lg font-semibold text-gray-900 flex items-center">
+                <svg className="w-5 h-5 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 6V8a1 1 0 011-1h6a1 1 0 011 1v2M8 12v8l4-4 4 4v-8" />
+                </svg>
+                Animation Studio
+              </h1>
+            </div>
+
+            {/* Right - Actions */}
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-600">
+                3D Animation Tool
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Controls Panel */}

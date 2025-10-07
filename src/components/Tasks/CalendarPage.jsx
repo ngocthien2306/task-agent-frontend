@@ -396,33 +396,69 @@ const CalendarPage = ({ user }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 to-cyan-100">
-      {/* Header */}
-      <div className="bg-white shadow-lg border-b border-gray-200">
+      {/* Top Navigation Bar */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
+            {/* Left - Back Navigation */}
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors rounded-lg hover:bg-white/50"
               >
-                <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
+                Về trang chính
               </button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h8a2 2 0 012 2v4m-4 8V9M8 21l4-4 4 4m-4-4V9m-8 4h16" />
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">My Calendar</h1>
-                  <p className="text-sm text-gray-500">
-                    {tasks.length} tasks • {schedules.length} schedule entries
-                  </p>
-                </div>
-              </div>
+              <div className="h-6 w-px bg-gray-300"></div>
+              <nav className="hidden sm:flex space-x-6">
+    
+                <button
+                  onClick={() => navigate('/notifications')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Thông báo
+                </button>
+                <button
+                  onClick={() => navigate('/subscription')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Subscription
+                </button>
+                <button
+                  onClick={() => navigate('/animation-studio')}
+                  className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Animation Studio
+                </button>
+              </nav>
             </div>
+
+            {/* Center - Title */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 ml-2">
+              <h1 className="text-lg font-semibold text-gray-900 flex items-center">
+                <svg className="w-5 h-5 text-violet-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h8a2 2 0 012 2v4m-4 8V9M8 21l4-4 4 4m-4-4V9m-8 4h16" />
+                </svg>
+                Calendar
+              </h1>
+            </div>
+
+            {/* Right - Actions */}
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-600">
+                {tasks.length} tasks • {schedules.length} schedules
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Header Controls */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
 
             {/* Controls */}
             <div className="flex items-center gap-4">

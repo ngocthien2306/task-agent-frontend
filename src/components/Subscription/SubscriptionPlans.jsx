@@ -146,7 +146,7 @@ export const SubscriptionPlans = ({ onPlanSelected, currentPlan = null }) => {
             return (
               <div
                 key={plan.plan_type}
-                className={`group relative rounded-3xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl ${
+                className={`group relative rounded-3xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl flex flex-col h-full ${
                   isRecommendedPlan(plan.plan_type)
                     ? 'bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-teal-500/10 border-2 border-indigo-300 ring-4 ring-indigo-100'
                     : isCurrentPlan(plan)
@@ -198,7 +198,7 @@ export const SubscriptionPlans = ({ onPlanSelected, currentPlan = null }) => {
                   </div>
                 )}
 
-                <div className="text-center">
+                <div className="text-center flex-grow flex flex-col">
                   {/* Plan name and badge */}
                   <div className="flex flex-col items-center mb-6">
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">
@@ -255,7 +255,7 @@ export const SubscriptionPlans = ({ onPlanSelected, currentPlan = null }) => {
                   </div>
 
                   {/* Features */}
-                  <div className="mb-8">
+                  <div className="mb-8 flex-grow">
                     <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
                       <svg className="w-4 h-4 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -277,7 +277,23 @@ export const SubscriptionPlans = ({ onPlanSelected, currentPlan = null }) => {
                   </div>
 
                   {/* CTA Button */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 mt-auto">
+                    {/* Additional info above button */}
+                    {plan.plan_type === 'pay_as_you_go' && (
+                      <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                        <p className="text-sm text-blue-700 font-medium text-center">
+                          🎯 Chỉ trả tiền cho những gì bạn sử dụng
+                        </p>
+                      </div>
+                    )}
+                    {plan.plan_type === 'free' && (
+                      <div className="p-3 bg-green-50 rounded-xl border border-green-200">
+                        <p className="text-sm text-green-700 font-medium text-center">
+                          🆓 Hoàn toàn miễn phí, không cần thẻ tín dụng
+                        </p>
+                      </div>
+                    )}
+
                     <button
                       onClick={() => handleSelectPlan(plan)}
                       disabled={loading || processingPlan || isCurrentPlan(plan)}
@@ -306,22 +322,6 @@ export const SubscriptionPlans = ({ onPlanSelected, currentPlan = null }) => {
                         <div className="absolute inset-0 rounded-2xl bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                       )}
                     </button>
-
-                    {/* Additional info */}
-                    {plan.plan_type === 'pay_as_you_go' && (
-                      <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
-                        <p className="text-sm text-blue-700 font-medium text-center">
-                          🎯 Chỉ trả tiền cho những gì bạn sử dụng
-                        </p>
-                      </div>
-                    )}
-                    {plan.plan_type === 'free' && (
-                      <div className="p-3 bg-green-50 rounded-xl border border-green-200">
-                        <p className="text-sm text-green-700 font-medium text-center">
-                          🆓 Hoàn toàn miễn phí, không cần thẻ tín dụng
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

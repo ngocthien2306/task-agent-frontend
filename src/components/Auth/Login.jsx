@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { AnimatedBackground } from "../Animations/AnimatedBackground";
 import { FloatingShapes } from "../Animations/FloatingShapes";
 import { authService } from "../../services/api";
+import { ValidatedInput } from "../Common/ValidatedInput";
+import { validateRequired } from "../../utils/validation";
 
 export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPassword }) => {
   const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
@@ -14,6 +16,8 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [validationResults, setValidationResults] = useState({});
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     // Check for success messages from URL params
@@ -33,6 +37,28 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
     if (error) setError("");
     if (successMessage) setSuccessMessage("");
   };
+
+  // Handle validation results
+  const handleValidation = (fieldName, result) => {
+    setValidationResults(prev => {
+      const newResults = {
+        ...prev,
+        [fieldName]: result
+      };
+      
+      // Check if all required fields are valid and have values
+      const allValid = formData.username.trim() && formData.password.trim();
+      setIsFormValid(allValid);
+      
+      return newResults;
+    });
+  };
+
+  // Update form validity when form data changes
+  useEffect(() => {
+    const isValid = formData.username.trim() && formData.password.trim();
+    setIsFormValid(isValid);
+  }, [formData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,41 +129,37 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 transition duration-300 bg-white bg-opacity-80 backdrop-blur-sm"
-              placeholder="Enter your username"
-            />
-          </div>
+          <ValidatedInput
+            type="text"
+            name="username"
+            label="Tên đăng nhập"
+            value={formData.username}
+            onChange={handleInputChange}
+            validation={(value) => validateRequired(value, 'Tên đăng nhập')}
+            onValidation={handleValidation}
+            required
+            placeholder="Nhập tên đăng nhập"
+            className="px-4 py-3 border-gray-300 rounded-xl focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 bg-white bg-opacity-80 backdrop-blur-sm"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 transition duration-300 bg-white bg-opacity-80 backdrop-blur-sm"
-              placeholder="Enter your password"
-            />
-          </div>
+          <ValidatedInput
+            type="password"
+            name="password"
+            label="Mật khẩu"
+            value={formData.password}
+            onChange={handleInputChange}
+            validation={(value) => validateRequired(value, 'Mật khẩu')}
+            onValidation={handleValidation}
+            required
+            placeholder="Nhập mật khẩu"
+            className="px-4 py-3 border-gray-300 rounded-xl focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 bg-white bg-opacity-80 backdrop-blur-sm"
+          />
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isFormValid}
             className={`w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold transition duration-300 shadow-lg hover:shadow-xl ${
-              loading 
+              loading || !isFormValid
                 ? "opacity-50 cursor-not-allowed" 
                 : "hover:from-pink-600 hover:to-purple-700 transform hover:scale-[1.02] hover:shadow-pink-500/25"
             }`}
@@ -148,20 +170,20 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Signing In...
+                Đang đăng nhập...
               </div>
-            ) : "Sign In"}
+            ) : "Đăng nhập"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Don't have an account?{" "}
+            Chưa có tài khoản?{" "}
             <button
               onClick={onSwitchToRegister}
               className="text-pink-600 hover:text-pink-700 font-semibold underline"
             >
-              Create Account
+              Tạo tài khoản
             </button>
           </p>
         </div>
@@ -171,7 +193,7 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
             onClick={onSwitchToForgotPassword}
             className="text-sm text-gray-500 hover:text-pink-600 underline transition duration-200"
           >
-            Forgot your password?
+            Quên mật khẩu?
           </button>
         </div>
       </div>

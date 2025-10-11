@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatedBackground } from "../Animations/AnimatedBackground";
 import { FloatingShapes } from "../Animations/FloatingShapes";
 import { authService } from "../../services/api";
+import { ValidatedInput } from "../Common/ValidatedInput";
+import { validatePassword, validateConfirmPassword } from "../../utils/validation";
 
 export const PasswordReset = () => {
   const [searchParams] = useSearchParams();
@@ -13,26 +15,64 @@ export const PasswordReset = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [validationResults, setValidationResults] = useState({});
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get("token");
     if (tokenFromUrl) {
       setToken(tokenFromUrl);
     } else {
-      setError("Invalid reset link. Please request a new password reset.");
+      setError("Link đặt lại mật khẩu không hợp lệ. Vui lòng yêu cầu đặt lại mật khẩu mới.");
     }
   }, [searchParams]);
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'newPassword') {
+      setNewPassword(value);
+    } else if (name === 'confirmPassword') {
+      setConfirmPassword(value);
+    }
+    if (error) setError("");
+  };
+
+  // Handle validation results
+  const handleValidation = (fieldName, result) => {
+    setValidationResults(prev => {
+      const newResults = {
+        ...prev,
+        [fieldName]: result
+      };
+      
+      // Check if all required fields are valid
+      const passwordValid = newResults.newPassword && newResults.newPassword.isValid;
+      const confirmPasswordValid = newResults.confirmPassword && newResults.confirmPassword.isValid;
+      
+      setIsFormValid(passwordValid && confirmPasswordValid);
+      return newResults;
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters long");
+    // Final validation
+    const passwordResult = validatePassword(newPassword);
+    const confirmPasswordResult = validateConfirmPassword(newPassword, confirmPassword);
+    
+    const finalValidation = {
+      newPassword: passwordResult,
+      confirmPassword: confirmPasswordResult
+    };
+    
+    setValidationResults(finalValidation);
+    
+    // Check if any field is invalid
+    const hasErrors = Object.values(finalValidation).some(result => !result.isValid);
+    if (hasErrors) {
+      setError("Vui lòng sửa các lỗi trong form trước khi đặt lại mật khẩu");
       return;
     }
 
@@ -70,15 +110,15 @@ export const PasswordReset = () => {
             </div>
             
             <h2 className="text-3xl font-bold text-green-600 mb-4">
-              Password Reset Successfully!
+              Đặt lại mật khẩu thành công!
             </h2>
             
             <p className="text-gray-600 mb-6">
-              Your password has been updated. You can now log in with your new password.
+              Mật khẩu của bạn đã được cập nhật. Bạn có thể đăng nhập bằng mật khẩu mới.
             </p>
             
             <p className="text-sm text-gray-500">
-              Redirecting to login page...
+              Đang chuyển hướng đến trang đăng nhập...
             </p>
           </div>
         </div>
@@ -101,18 +141,18 @@ export const PasswordReset = () => {
             </div>
             
             <h2 className="text-3xl font-bold text-red-600 mb-4">
-              Invalid Reset Link
+              Link không hợp lệ
             </h2>
             
             <p className="text-gray-600 mb-6">
-              The password reset link is invalid or has expired. Please request a new password reset.
+              Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới.
             </p>
             
             <button
               onClick={() => navigate("/")}
               className="text-blue-600 hover:text-blue-700 font-medium underline"
             >
-              Back to Login
+              Về trang đăng nhập
             </button>
           </div>
         </div>
@@ -133,9 +173,9 @@ export const PasswordReset = () => {
             </svg>
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-            Reset Password
+            Đặt lại mật khẩu
           </h2>
-          <p className="text-gray-600 mt-2">Enter your new password</p>
+          <p className="text-gray-600 mt-2">Nhập mật khẩu mới của bạn</p>
         </div>
 
         {error && (
@@ -144,46 +184,57 @@ export const PasswordReset = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              New Password *
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="At least 6 characters"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <ValidatedInput
+            type="password"
+            name="newPassword"
+            label="Mật khẩu mới"
+            value={newPassword}
+            onChange={handleInputChange}
+            validation={validatePassword}
+            onValidation={handleValidation}
+            required
+            showPasswordStrength
+            placeholder="Ít nhất 8 ký tự"
+            className="px-3 py-2 focus:ring-2 focus:ring-blue-500"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm New Password *
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Confirm your new password"
-            />
-          </div>
+          <ValidatedInput
+            type="password"
+            name="confirmPassword"
+            label="Xác nhận mật khẩu mới"
+            value={confirmPassword}
+            onChange={handleInputChange}
+            validation={(value) => validateConfirmPassword(newPassword, value)}
+            onValidation={handleValidation}
+            required
+            placeholder="Nhập lại mật khẩu mới"
+            className="px-3 py-2 focus:ring-2 focus:ring-blue-500"
+          />
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isFormValid}
             className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold transition duration-300 shadow-lg hover:shadow-xl ${
-              loading 
+              loading || !isFormValid
                 ? "opacity-50 cursor-not-allowed" 
                 : "hover:from-blue-600 hover:to-purple-700 transform hover:scale-[1.02] hover:shadow-blue-500/25"
             }`}
           >
-            {loading ? "Resetting Password..." : "Reset Password"}
+            {loading ? "Đang đặt lại mật khẩu..." : "Đặt lại mật khẩu"}
           </button>
+          
+          {/* Form validation status */}
+          {Object.keys(validationResults).length > 0 && !isFormValid && (
+            <div className="text-center text-sm text-gray-600">
+              <span className="inline-flex items-center text-yellow-600">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Vui lòng hoàn thành tất cả các trường bắt buộc
+              </span>
+            </div>
+          )}
         </form>
 
         <div className="mt-6 text-center">
@@ -191,7 +242,7 @@ export const PasswordReset = () => {
             onClick={() => navigate("/")}
             className="text-blue-600 hover:text-blue-700 font-medium underline"
           >
-            Back to Login
+            Về trang đăng nhập
           </button>
         </div>
       </div>

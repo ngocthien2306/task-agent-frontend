@@ -291,7 +291,7 @@ export const ChatProvider = ({ children }) => {
       
       const responseData = await data.json();
       console.log('🔍 Full response data:', responseData);
-      
+
       const resp = responseData.messages;
       setMessages((messages) => [...messages, ...resp]);
 
@@ -305,6 +305,10 @@ export const ChatProvider = ({ children }) => {
           displayType: responseData.taskData?.displayType
         });
       }
+
+      // Refresh subscription data after successful chat to update usage
+      console.log('🔄 Refreshing subscription data after chat...');
+      await loadSubscription();
     } catch (error) {
       console.error("Error in chat processing:", error);
       // Add error message

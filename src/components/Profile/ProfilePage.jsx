@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
 import { profileService } from '../../services/api';
-import { OnboardingFormModal } from '../Onboarding/OnboardingFormModal';
+import { PersonalInfoStepEnhanced } from '../Onboarding/steps/PersonalInfoStepEnhanced';
+import { WorkStyleStep } from '../Onboarding/steps/WorkStyleStep';
+import { GoalsStep } from '../Onboarding/steps/GoalsStep';
+import { InterestsStep } from '../Onboarding/steps/InterestsStep';
+import { TechSettingsStep } from '../Onboarding/steps/TechSettingsStep';
+import { AICustomizationStep } from '../Onboarding/steps/AICustomizationStep';
 import LoadingSpinner from './LoadingSpinner';
 
 const ProfilePage = () => {
@@ -17,9 +22,102 @@ const ProfilePage = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    if (profile) {
+      initializeFormData(profile);
+    }
+  }, [profile, user]);
+
+  const handleStartEditing = () => {
+    if (profile) {
+      initializeFormData(profile);
+    }
+    setIsEditing(true);
+    setCurrentStep(1);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setCurrentStep(1);
+    setFormData({});
+  };
+
+  const handleNext = () => {
+    if (currentStep < 6) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSave(formData);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const updateFormData = (stepData) => {
+    setFormData(prev => ({
+      ...prev,
+      ...stepData
+    }));
+  };
+
+  const steps = [
+    {
+      id: 1,
+      title: "Thông tin cá nhân",
+      subtitle: "Hãy cho chúng tôi biết về bản thân và công việc của bạn",
+      icon: "👤",
+      component: PersonalInfoStepEnhanced
+    },
+    {
+      id: 2,
+      title: "Phong cách làm việc", 
+      subtitle: "Cách bạn thích làm việc và giao tiếp",
+      icon: "⚡",
+      component: WorkStyleStep
+    },
+    {
+      id: 3,
+      title: "Mục tiêu & Ưu tiên",
+      subtitle: "Những gì bạn muốn đạt được",
+      icon: "🎯", 
+      component: GoalsStep
+    },
+    {
+      id: 4,
+      title: "Sở thích cá nhân",
+      subtitle: "Để AI hiểu bạn hơn",
+      icon: "❤️",
+      component: InterestsStep
+    },
+    {
+      id: 5,
+      title: "Cài đặt kỹ thuật",
+      subtitle: "Tùy chỉnh trải nghiệm công nghệ",
+      icon: "⚙️",
+      component: TechSettingsStep
+    },
+    {
+      id: 6,
+      title: "Tùy chỉnh AI Assistant", 
+      subtitle: "Cách AI sẽ hỗ trợ bạn",
+      icon: "🤖",
+      component: AICustomizationStep
+    }
+  ];
+
+  const currentStepData = steps.find(step => step.id === currentStep);
+  const StepComponent = currentStepData?.component;
+  const progressPercentage = (currentStep / steps.length) * 100;
   }, []);
 
   const fetchProfile = async () => {
@@ -38,7 +136,57 @@ const ProfilePage = () => {
     }
   };
 
-  const handleSave = async (formData) => {
+  const initializeFormData = (profileData) => {
+    setFormData({
+      // Personal Info
+      first_name: profileData?.first_name || user?.profile?.first_name || '',
+      last_name: profileData?.last_name || user?.profile?.last_name || '',
+      phone: profileData?.phone || user?.profile?.phone || '',
+      date_of_birth: profileData?.date_of_birth || user?.profile?.date_of_birth || '',
+      avatar_url: profileData?.avatar_url || user?.profile?.avatar_url || '',
+      
+      // Professional Info
+      occupation: profileData?.occupation || '',
+      company: profileData?.company || '',
+      industry: profileData?.industry || '',
+      position_level: profileData?.position_level || '',
+      work_location: profileData?.work_location || '',
+      
+      // Work Style
+      work_style: profileData?.work_style || user?.personality?.work_style || 'organized',
+      communication_style: profileData?.communication_style || user?.personality?.communication_style || 'friendly',
+      working_hours: profileData?.working_hours || '',
+      break_style: profileData?.break_style || '',
+      
+      // Goals & Priorities
+      primary_goals: profileData?.primary_goals || [],
+      task_priorities: profileData?.task_priorities || '',
+      planning_horizon: profileData?.planning_horizon || '',
+      success_metrics: profileData?.success_metrics || [],
+      
+      // Personal Interests
+      interests: profileData?.interests || user?.interests || [],
+      learning_style: profileData?.learning_style || '',
+      motivation_factors: profileData?.motivation_factors || [],
+      stress_management: profileData?.stress_management || [],
+      
+      // Tech Settings
+      timezone: profileData?.timezone || user?.timezone || 'UTC',
+      language_preference: profileData?.language_preference || user?.language_preference || 'en',
+      notification_preferences: profileData?.notification_preferences || [],
+      device_usage: profileData?.device_usage || '',
+      tech_level: profileData?.tech_level || '',
+      
+      // AI Customization
+      interaction_preference: profileData?.interaction_preference || user?.personality?.interaction_preference || 'detailed',
+      custom_instructions: profileData?.custom_instructions || user?.custom_instructions || '',
+      reminder_style: profileData?.reminder_style || '',
+      feedback_preference: profileData?.feedback_preference || '',
+      privacy_level: profileData?.privacy_level || ''
+    });
+  };
+
+  const handleSave = async (finalFormData) => {
     if (!user?.id) return;
     
     try {
@@ -46,7 +194,7 @@ const ProfilePage = () => {
       setError(null);
       setSuccessMessage('');
       
-      const response = await profileService.updateProfile(user.id, formData, authFetch);
+      const response = await profileService.updateProfile(user.id, finalFormData, authFetch);
       
       if (response.success) {
         setProfile(response.profile);
@@ -214,7 +362,7 @@ const ProfilePage = () => {
             <div className="flex items-center space-x-3">
               {!isEditing && (
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={handleStartEditing}
                   className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,6 +370,23 @@ const ProfilePage = () => {
                   </svg>
                   Chỉnh sửa
                 </button>
+              )}
+              
+              {isEditing && (
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleCancelEdit}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-all duration-200"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Hủy
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    Bước {currentStep} / {steps.length}
+                  </span>
+                </div>
               )}
             </div>
           </div>
@@ -269,49 +434,127 @@ const ProfilePage = () => {
 
         {/* Profile Content */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 overflow-hidden">
-          <div className="p-8">
-            {profile ? (
-              <ProfileView profile={profile} />
-            ) : (
-              <div className="text-center py-12">
-                <div className="mx-auto h-16 w-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
-                  <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+          {isEditing ? (
+            /* Editing Mode - Inline Form */
+            <div>
+              {/* Progress Header */}
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Cập nhật thông tin cá nhân</h2>
+                    <p className="text-blue-100">Chỉnh sửa thông tin để AI có thể hỗ trợ bạn tốt hơn</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Chưa có thông tin cá nhân
-                </h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Tạo profile để cá nhân hóa trải nghiệm AI của bạn
-                </p>
+                
+                {/* Progress Bar */}
+                <div className="w-full bg-blue-400 bg-opacity-30 rounded-full h-2">
+                  <div 
+                    className="bg-white rounded-full h-2 transition-all duration-300"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-blue-100 mt-2">
+                  <span>Bước {currentStep} / {steps.length}</span>
+                  <span>{Math.round(progressPercentage)}% hoàn thành</span>
+                </div>
+              </div>
+
+              {/* Step Content */}
+              <div className="p-8">
+                {currentStepData && (
+                  <>
+                    <div className="text-center mb-8">
+                      <div className="text-4xl mb-3">{currentStepData.icon}</div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                        {currentStepData.title}
+                      </h3>
+                      <p className="text-gray-600">
+                        {currentStepData.subtitle}
+                      </p>
+                    </div>
+
+                    {StepComponent && (
+                      <StepComponent 
+                        data={formData}
+                        onChange={updateFormData}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Footer Navigation */}
+              <div className="bg-gray-50 px-8 py-6 flex justify-between items-center">
                 <button
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 1}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                    currentStep === 1
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Tạo profile
+                  ← Trước
+                </button>
+
+                <div className="flex gap-2">
+                  {steps.map(step => (
+                    <div
+                      key={step.id}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        step.id === currentStep
+                          ? 'bg-blue-500 scale-125'
+                          : step.id < currentStep
+                          ? 'bg-green-500'
+                          : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleNext}
+                  disabled={saving}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-2 rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Đang lưu...' : currentStep === steps.length ? 'Cập nhật' : 'Tiếp theo →'}
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            /* View Mode */
+            <div className="p-8">
+              {profile ? (
+                <ProfileView profile={profile} />
+              ) : (
+                <div className="text-center py-12">
+                  <div className="mx-auto h-16 w-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                    <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Chưa có thông tin cá nhân
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Tạo profile để cá nhân hóa trải nghiệm AI của bạn
+                  </p>
+                  <button
+                    onClick={handleStartEditing}
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Tạo profile
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Edit Modal */}
-      {isEditing && (
-        <OnboardingFormModal
-          isOpen={isEditing}
-          onClose={() => setIsEditing(false)}
-          initialData={profile}
-          onSubmit={handleSave}
-          isLoading={saving}
-          title="Cập nhật thông tin cá nhân"
-          submitText="Lưu thông tin"
-        />
-      )}
     </div>
   );
 };

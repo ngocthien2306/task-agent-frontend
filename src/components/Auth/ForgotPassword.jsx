@@ -2,29 +2,33 @@ import { useState } from "react";
 import { AnimatedBackground } from "../Animations/AnimatedBackground";
 import { FloatingShapes } from "../Animations/FloatingShapes";
 import { authService } from "../../services/api";
+import { ValidatedInput } from "../Common/ValidatedInput";
+import { validateEmail } from "../../utils/validation";
 
 export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState("email"); // "email" or "success"
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
     if (error) setError("");
   };
 
+  // Handle validation results
+  const handleValidation = (_, result) => {
+    setIsFormValid(result.isValid && email.trim());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!email.trim()) {
-      setError("Please enter your email address");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Please enter a valid email address");
+    // Final validation
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.errors[0] || "Vui lòng nhập email hợp lệ");
       return;
     }
 
@@ -65,11 +69,11 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
             </div>
             
             <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-4">
-              Check Your Email
+              Kiểm tra Email
             </h2>
             
             <p className="text-gray-600 mb-2">
-              We've sent a password reset link to:
+              Chúng tôi đã gửi link đặt lại mật khẩu đến:
             </p>
             <p className="text-pink-600 font-semibold mb-6 break-all">
               {email}
@@ -81,8 +85,8 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="text-sm text-blue-700">
-                  <p className="font-medium mb-1">Didn't receive the email?</p>
-                  <p>Check your spam folder or wait a few minutes for it to arrive.</p>
+                  <p className="font-medium mb-1">Không nhận được email?</p>
+                  <p>Kiểm tra thư mục spam hoặc đợi vài phút để email đến.</p>
                 </div>
               </div>
             </div>
@@ -92,14 +96,14 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
                 onClick={handleSendAnother}
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold transition duration-300 shadow-lg hover:shadow-xl hover:from-pink-600 hover:to-purple-700 transform hover:scale-[1.02] hover:shadow-pink-500/25"
               >
-                Send Another Email
+                Gửi lại Email
               </button>
               
               <button
                 onClick={onBackToLogin}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-semibold transition duration-300"
               >
-                Back to Login
+                Về trang đăng nhập
               </button>
             </div>
           </div>
@@ -120,8 +124,8 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Forgot Password?</h2>
-          <p className="text-gray-600 mt-2">No worries! Enter your email and we'll send you a reset link.</p>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Quên mật khẩu?</h2>
+          <p className="text-gray-600 mt-2">Đừng lo! Nhập email của bạn và chúng tôi sẽ gửi link đặt lại mật khẩu.</p>
         </div>
 
         {error && (
@@ -134,32 +138,31 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                </svg>
-              </div>
-              <input
-                type="email"
-                value={email}
-                onChange={handleEmailChange}
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-orange-500 focus:ring-opacity-50 focus:border-orange-500 transition duration-300 bg-white bg-opacity-80 backdrop-blur-sm"
-                placeholder="Enter your email address"
-              />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+              <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+              </svg>
             </div>
+            <ValidatedInput
+              type="email"
+              name="email"
+              label="Địa chỉ Email"
+              value={email}
+              onChange={handleEmailChange}
+              validation={validateEmail}
+              onValidation={handleValidation}
+              required
+              placeholder="Nhập địa chỉ email của bạn"
+              className="pl-10 pr-4 py-3 border-gray-300 rounded-xl focus:ring-3 focus:ring-orange-500 focus:ring-opacity-50 focus:border-orange-500 bg-white bg-opacity-80 backdrop-blur-sm"
+            />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isFormValid}
             className={`w-full bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 px-4 rounded-xl font-semibold transition duration-300 shadow-lg hover:shadow-xl ${
-              loading 
+              loading || !isFormValid
                 ? "opacity-50 cursor-not-allowed" 
                 : "hover:from-orange-600 hover:to-red-700 transform hover:scale-[1.02] hover:shadow-orange-500/25"
             }`}
@@ -170,9 +173,9 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Sending Reset Link...
+                Đang gửi link đặt lại...
               </div>
-            ) : "Send Reset Link"}
+            ) : "Gửi link đặt lại"}
           </button>
         </form>
 
@@ -191,7 +194,7 @@ export const ForgotPassword = ({ onBackToLogin, onResetSuccess }) => {
               onClick={onBackToLogin}
               className="text-pink-600 hover:text-pink-700 font-semibold underline transition duration-200"
             >
-              ← Back to Login
+              ← Về trang đăng nhập
             </button>
           </div>
         </div>

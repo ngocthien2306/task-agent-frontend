@@ -2,6 +2,14 @@ import { useState } from "react";
 import { AnimatedBackground } from "../Animations/AnimatedBackground";
 import { FloatingShapes } from "../Animations/FloatingShapes";
 import { authService } from "../../services/api";
+import { ValidatedInput } from "../Common/ValidatedInput";
+import { 
+  validateEmail, 
+  validateUsername, 
+  validatePassword, 
+  validateConfirmPassword, 
+  validateName 
+} from "../../utils/validation";
 
 export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
   const [formData, setFormData] = useState({
@@ -15,6 +23,8 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [validationResults, setValidationResults] = useState({});
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -26,16 +36,48 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
     if (successMessage) setSuccessMessage("");
   };
 
+  // Handle validation results
+  const handleValidation = (fieldName, result) => {
+    setValidationResults(prev => {
+      const newResults = {
+        ...prev,
+        [fieldName]: result
+      };
+      
+      // Check if all required fields are valid
+      const requiredFields = ['email', 'username', 'password', 'confirmPassword'];
+      const allValid = requiredFields.every(field => {
+        const fieldResult = newResults[field];
+        return fieldResult && fieldResult.isValid;
+      });
+      
+      setIsFormValid(allValid);
+      return newResults;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    // Final validation check
+    const emailResult = validateEmail(formData.email);
+    const usernameResult = validateUsername(formData.username);
+    const passwordResult = validatePassword(formData.password);
+    const confirmPasswordResult = validateConfirmPassword(formData.password, formData.confirmPassword);
+    
+    const finalValidation = {
+      email: emailResult,
+      username: usernameResult,
+      password: passwordResult,
+      confirmPassword: confirmPasswordResult
+    };
+    
+    setValidationResults(finalValidation);
+    
+    // Check if any field is invalid
+    const hasErrors = Object.values(finalValidation).some(result => !result.isValid);
+    if (hasErrors) {
+      setError("Vui lòng sửa các lỗi trong form trước khi đăng ký");
       return;
     }
 
@@ -44,7 +86,7 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
     setSuccessMessage("");
 
     try {
-      const result = await authService.register({
+      await authService.register({
         email: formData.email,
         username: formData.username,
         password: formData.password,
@@ -112,117 +154,118 @@ export const Register = ({ onSwitchToLogin, onRegisterSuccess }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 transition duration-300 bg-white bg-opacity-80 backdrop-blur-sm"
-                placeholder="Optional"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 transition duration-300 bg-white bg-opacity-80 backdrop-blur-sm"
-                placeholder="Optional"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email *
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="your.email@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Username *
-            </label>
-            <input
+            <ValidatedInput
               type="text"
-              name="username"
-              value={formData.username}
+              name="first_name"
+              label="Tên"
+              value={formData.first_name}
               onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="Choose a username"
+              validation={(value) => validateName(value, 'Tên', false)}
+              onValidation={handleValidation}
+              placeholder="Tùy chọn"
+              className="px-4 py-3 border-gray-300 rounded-xl focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 bg-white bg-opacity-80 backdrop-blur-sm"
+            />
+            <ValidatedInput
+              type="text"
+              name="last_name"
+              label="Họ"
+              value={formData.last_name}
+              onChange={handleInputChange}
+              validation={(value) => validateName(value, 'Họ', false)}
+              onValidation={handleValidation}
+              placeholder="Tùy chọn"
+              className="px-4 py-3 border-gray-300 rounded-xl focus:ring-3 focus:ring-pink-500 focus:ring-opacity-50 focus:border-pink-500 bg-white bg-opacity-80 backdrop-blur-sm"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password *
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="At least 6 characters"
-            />
-          </div>
+          <ValidatedInput
+            type="email"
+            name="email"
+            label="Email"
+            value={formData.email}
+            onChange={handleInputChange}
+            validation={validateEmail}
+            onValidation={handleValidation}
+            required
+            placeholder="your.email@example.com"
+            className="px-3 py-2 focus:ring-2 focus:ring-pink-500"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password *
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="Confirm your password"
-            />
-          </div>
+          <ValidatedInput
+            type="text"
+            name="username"
+            label="Tên đăng nhập"
+            value={formData.username}
+            onChange={handleInputChange}
+            validation={validateUsername}
+            onValidation={handleValidation}
+            required
+            placeholder="Chọn tên đăng nhập"
+            className="px-3 py-2 focus:ring-2 focus:ring-pink-500"
+          />
+
+          <ValidatedInput
+            type="password"
+            name="password"
+            label="Mật khẩu"
+            value={formData.password}
+            onChange={handleInputChange}
+            validation={validatePassword}
+            onValidation={handleValidation}
+            required
+            showPasswordStrength
+            placeholder="Ít nhất 8 ký tự"
+            className="px-3 py-2 focus:ring-2 focus:ring-pink-500"
+          />
+
+          <ValidatedInput
+            type="password"
+            name="confirmPassword"
+            label="Xác nhận mật khẩu"
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+            validation={(value) => validateConfirmPassword(formData.password, value)}
+            onValidation={handleValidation}
+            required
+            placeholder="Nhập lại mật khẩu"
+            className="px-3 py-2 focus:ring-2 focus:ring-pink-500"
+          />
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isFormValid}
             className={`w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold transition duration-300 shadow-lg hover:shadow-xl ${
-              loading 
+              loading || !isFormValid
                 ? "opacity-50 cursor-not-allowed" 
                 : "hover:from-pink-600 hover:to-purple-700 transform hover:scale-[1.02] hover:shadow-pink-500/25"
             }`}
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
           </button>
+          
+          {/* Form validation status */}
+          {Object.keys(validationResults).length > 0 && !isFormValid && (
+            <div className="text-center text-sm text-gray-600">
+              <span className="inline-flex items-center text-yellow-600">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Vui lòng hoàn thành tất cả các trường bắt buộc
+              </span>
+            </div>
+          )}
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Already have an account?{" "}
+            Đã có tài khoản?{" "}
             <button
               onClick={onSwitchToLogin}
               className="text-pink-600 hover:text-pink-700 font-semibold underline"
             >
-              Sign In
+              Đăng nhập
             </button>
           </p>
         </div>

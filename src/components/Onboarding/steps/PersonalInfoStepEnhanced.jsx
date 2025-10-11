@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import AvatarDisplay from '../../common/AvatarDisplay';
+import { ValidatedInput } from '../../Common/ValidatedInput';
+import { validateName, validatePhone, validateDate } from '../../../utils/validation';
 
 const PersonalInfoStepEnhanced = ({ data, onChange }) => {
   const [formData, setFormData] = useState({
@@ -65,6 +67,18 @@ const PersonalInfoStepEnhanced = ({ data, onChange }) => {
     };
     setFormData(updated);
     onChange(updated);
+  };
+
+  // Handle validated input changes
+  const handleValidatedInputChange = (e) => {
+    const { name, value } = e.target;
+    handleInputChange(name, value);
+  };
+
+  // Handle validation results (optional - for future use)
+  const handleValidation = (fieldName, result) => {
+    // Could store validation results here if needed
+    console.log(`Validation for ${fieldName}:`, result);
   };
 
   const handleAvatarClick = () => {
@@ -208,60 +222,80 @@ const PersonalInfoStepEnhanced = ({ data, onChange }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* First Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <span className="text-lg mr-2">👤</span>
-              Họ
-            </label>
-            <input
+            <ValidatedInput
               type="text"
+              name="first_name"
+              label={
+                <span className="flex items-center">
+                  <span className="text-lg mr-2">👤</span>
+                  Họ
+                </span>
+              }
               value={formData.first_name}
-              onChange={(e) => handleInputChange('first_name', e.target.value)}
+              onChange={handleValidatedInputChange}
+              validation={(value) => validateName(value, 'Họ', false)}
+              onValidation={handleValidation}
               placeholder="Nguyễn"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="p-3 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Last Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <span className="text-lg mr-2">✨</span>
-              Tên
-            </label>
-            <input
+            <ValidatedInput
               type="text"
+              name="last_name"
+              label={
+                <span className="flex items-center">
+                  <span className="text-lg mr-2">✨</span>
+                  Tên
+                </span>
+              }
               value={formData.last_name}
-              onChange={(e) => handleInputChange('last_name', e.target.value)}
+              onChange={handleValidatedInputChange}
+              validation={(value) => validateName(value, 'Tên', false)}
+              onValidation={handleValidation}
               placeholder="Văn A"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="p-3 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <span className="text-lg mr-2">📱</span>
-              Số điện thoại
-            </label>
-            <input
+            <ValidatedInput
               type="tel"
+              name="phone"
+              label={
+                <span className="flex items-center">
+                  <span className="text-lg mr-2">📱</span>
+                  Số điện thoại
+                </span>
+              }
               value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
+              onChange={handleValidatedInputChange}
+              validation={(value) => validatePhone(value, false)}
+              onValidation={handleValidation}
               placeholder="+84 xxx xxx xxx"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="p-3 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Date of Birth */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <span className="text-lg mr-2">🎂</span>
-              Ngày sinh
-            </label>
-            <input
+            <ValidatedInput
               type="date"
+              name="date_of_birth"
+              label={
+                <span className="flex items-center">
+                  <span className="text-lg mr-2">🎂</span>
+                  Ngày sinh
+                </span>
+              }
               value={formData.date_of_birth}
-              onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              onChange={handleValidatedInputChange}
+              validation={(value) => validateDate(value, 'Ngày sinh', false)}
+              onValidation={handleValidation}
+              className="p-3 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>

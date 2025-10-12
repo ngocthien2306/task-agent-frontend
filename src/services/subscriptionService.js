@@ -46,12 +46,14 @@ export class SubscriptionService {
   async getUserSubscription(userId) {
     try {
       // Try Node.js API first (has middleware integration)
-      let response = await this.authFetch(`${NODE_API_URL}/subscription/${userId}`);
+      // let response = await this.authFetch(`${NODE_API_URL}/subscription/${userId}`);
       
-      if (!response.ok && response.status !== 404) {
-        // Fallback to Python API
-        response = await this.authFetch(`${API_BASE_URL}/api/v1/subscription/${userId}`);
-      }
+      // if (!response.ok && response.status !== 404) {
+      //   // Fallback to Python API
+      //   response = await this.authFetch(`${API_BASE_URL}/api/v1/subscription/${userId}`);
+      // }
+
+      let response = await this.authFetch(`${API_BASE_URL}/api/v1/subscription/${userId}`);
       
       if (!response.ok) {
         if (response.status === 404) {

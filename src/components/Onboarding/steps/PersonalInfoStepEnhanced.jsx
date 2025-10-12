@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import AvatarDisplay from '../../common/AvatarDisplay';
+import AvatarDisplay from '../../Common/AvatarDisplay';
 import { ValidatedInput } from '../../Common/ValidatedInput';
 import { validateName, validatePhone, validateDate } from '../../../utils/validation';
 

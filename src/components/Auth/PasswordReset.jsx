@@ -5,10 +5,12 @@ import { FloatingShapes } from "../Animations/FloatingShapes";
 import { authService } from "../../services/api";
 import { ValidatedInput } from "../Common/ValidatedInput";
 import { validatePassword, validateConfirmPassword } from "../../utils/validation";
+import { useAuth } from "../../hooks/useAuth";
 
 export const PasswordReset = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -82,12 +84,16 @@ export const PasswordReset = () => {
     try {
       await authService.resetPassword(token, newPassword);
       setSuccess(true);
-      
-      // Redirect to login after 3 seconds
+
+      // Logout and redirect to login after 3 seconds
       setTimeout(() => {
-        navigate("/?reset=true");
+        logout();
+        // Use window.location to force a full page reload
+        setTimeout(() => {
+          window.location.href = "/?reset=true";
+        }, 0);
       }, 3000);
-      
+
     } catch (error) {
       setError(error.message || "Password reset failed. Please try again.");
     } finally {
@@ -149,7 +155,13 @@ export const PasswordReset = () => {
             </p>
             
             <button
-              onClick={() => navigate("/")}
+              onClick={() => {
+                logout();
+                // Use setTimeout to ensure logout completes before navigation
+                setTimeout(() => {
+                  window.location.href = "/";
+                }, 0);
+              }}
               className="text-blue-600 hover:text-blue-700 font-medium underline"
             >
               Về trang đăng nhập
@@ -239,7 +251,13 @@ export const PasswordReset = () => {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => {
+              logout();
+              // Use setTimeout to ensure logout completes before navigation
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 0);
+            }}
             className="text-blue-600 hover:text-blue-700 font-medium underline"
           >
             Về trang đăng nhập

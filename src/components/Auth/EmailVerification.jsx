@@ -3,10 +3,12 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatedBackground } from "../Animations/AnimatedBackground";
 import { FloatingShapes } from "../Animations/FloatingShapes";
 import { authService } from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 
 export const EmailVerification = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [status, setStatus] = useState("verifying"); // verifying, success, error
   const [message, setMessage] = useState("");
   const [resendEmail, setResendEmail] = useState("");
@@ -14,10 +16,14 @@ export const EmailVerification = () => {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    
+
     if (!token) {
-      setStatus("error");
-      setMessage("Invalid verification link. Please check your email for the correct link.");
+      // Only set error if we haven't already successfully verified
+      // This prevents error flash after successful verification
+      if (status === "verifying") {
+        setStatus("error");
+        setMessage("Invalid verification link. Please check your email for the correct link.");
+      }
       return;
     }
 
@@ -152,7 +158,13 @@ export const EmailVerification = () => {
 
           <div className="mt-6">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => {
+                logout();
+                // Use setTimeout to ensure logout completes before navigation
+                setTimeout(() => {
+                  window.location.href = "/";
+                }, 0);
+              }}
               className="text-blue-600 hover:text-blue-700 font-medium underline"
             >
               Back to Login

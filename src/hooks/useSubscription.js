@@ -22,7 +22,7 @@ export const useSubscription = () => {
   // Error states
   const [error, setError] = useState(null);
 
-  const userId = user?.user_id || user?.id || user?.username;
+  const userId = user?.username;
 
   /**
    * Load user's subscription data
@@ -81,7 +81,7 @@ export const useSubscription = () => {
     setUsageLoading(true);
     
     try {
-      const result = await subscriptionService.getUsageStats(userId, days);
+      const result = await subscriptionService.getUsageStats(user?.username, days);
       
       if (result.success) {
         setUsageStats(result.stats);

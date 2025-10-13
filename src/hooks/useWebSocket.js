@@ -143,7 +143,8 @@ export const useWebSocket = (user) => {
     if (notification && notification.isStored && notification.storedId) {
       try {
         const token = localStorage.getItem('token');
-        await fetch(`http://localhost:8000/api/v1/notifications/${notification.storedId}/read`, {
+        const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+        await fetch(`${pythonApiUrl}/api/v1/notifications/${notification.storedId}/read`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -178,8 +179,9 @@ export const useWebSocket = (user) => {
       try {
         const token = localStorage.getItem('token');
         console.log('🔑 Token found:', !!token);
-        
-        const response = await fetch(`http://localhost:8000/api/v1/notifications/${notification.id}`, {
+        const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+
+        const response = await fetch(`${pythonApiUrl}/api/v1/notifications/${notification.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -219,10 +221,11 @@ export const useWebSocket = (user) => {
   // Fetch stored notifications from API
   const fetchStoredNotifications = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/notifications/', {
+      const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${pythonApiUrl}/api/v1/notifications/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -32,8 +32,9 @@ class WebSocketService {
     }
 
     this.userId = userId;
-    const wsUrl = `ws://localhost:8000/api/v1/ws/notifications/${userId}`;
-    
+    const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+    const wsUrl = pythonApiUrl.replace('http', 'ws') + `/api/v1/ws/notifications/${userId}`;
+
     console.log('🔌 Connecting to WebSocket:', wsUrl);
 
     try {

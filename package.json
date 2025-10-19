@@ -12,6 +12,8 @@
     "@react-three/drei": "9.75.0",
     "@react-three/fiber": "8.13.3",
     "@react-three/xr": "^5.7.1",
+    "@stripe/react-stripe-js": "^5.2.0",
+    "@stripe/stripe-js": "^8.1.0",
     "@types/three": "0.152.1",
     "i18next": "^25.4.2",
     "i18next-browser-languagedetector": "^8.2.0",

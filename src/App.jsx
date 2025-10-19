@@ -13,6 +13,8 @@ import NotificationToast from "./components/Notifications/NotificationToast";
 import { NotificationsPage } from "./features/notifications";
 import AnimationStudio from "./pages/AnimationStudio";
 import { SubscriptionPage } from "./components/Subscription/SubscriptionPage";
+import { PaymentSuccess } from "./pages/PaymentSuccess";
+import { PaymentCancel } from "./pages/PaymentCancel";
 import { useAuth } from "./hooks/useAuth";
 import { useState, useEffect } from "react";
 
@@ -126,6 +128,8 @@ function App() {
         <Route path="/notifications" element={<NotificationsPage user={user} />} />
         <Route path="/animation-studio" element={<AnimationStudio />} />
         <Route path="/subscription" element={<SubscriptionPage />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/cancel" element={<PaymentCancel />} />
       </Routes>
     </>
   );

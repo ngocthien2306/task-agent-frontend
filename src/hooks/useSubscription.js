@@ -81,7 +81,7 @@ export const useSubscription = () => {
     setUsageLoading(true);
     
     try {
-      const result = await subscriptionService.getUsageStats(user?.username, days);
+      const result = await subscriptionService.getUsageStats(user?.id, days);
       
       if (result.success) {
         setUsageStats(result.stats);

@@ -1,5 +1,6 @@
 import { Notification } from '../types';
 import { NotificationService } from './notificationService';
+import { API_BASE_URL } from '../../../config/api';
 
 export class WebSocketService {
   private static instance: WebSocketService;
@@ -39,7 +40,6 @@ export class WebSocketService {
       return;
     }
 
-    const API_BASE_URL = 'https://task-agent-api.ngrok.dev';
     const wsUrl = API_BASE_URL.replace('http', 'ws') + `/api/v1/ws/notifications/${userId}`;
 
     try {

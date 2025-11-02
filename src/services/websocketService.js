@@ -3,6 +3,8 @@
  * Handles bidirectional communication with backend
  */
 
+import { API_BASE_URL } from '../config/api';
+
 class WebSocketService {
   constructor() {
     this.socket = null;
@@ -32,8 +34,7 @@ class WebSocketService {
     }
 
     this.userId = userId;
-    const pythonApiUrl = 'https://task-agent-api.ngrok.dev';
-    const wsUrl = pythonApiUrl.replace('http', 'ws') + `/api/v1/ws/notifications/${userId}`;
+    const wsUrl = API_BASE_URL.replace('http', 'ws') + `/api/v1/ws/notifications/${userId}`;
 
     console.log('🔌 Connecting to WebSocket:', wsUrl);
 

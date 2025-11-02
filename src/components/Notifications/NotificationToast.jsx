@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { API_BASE_URL } from '../../config/api';
 import './NotificationToast.css';
 
 const NotificationToast = ({ user }) => {
@@ -92,8 +93,7 @@ const NotificationToast = ({ user }) => {
 
       // Call API to disable socket notifications for this reminder
       const token = localStorage.getItem('token');
-      const pythonApiUrl = 'https://task-agent-api.ngrok.dev';
-      const response = await fetch(`${pythonApiUrl}/api/v1/reminders/${reminderId}/disable-socket`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/reminders/${reminderId}/disable-socket`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -2,6 +2,7 @@ import { Loader } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Leva } from "leva";
 import { Routes, Route } from "react-router-dom";
+import { API_BASE_URL } from "./config/api";
 import { Experience } from "./components/Experience";
 import { UI } from "./components/UI";
 import { AuthScreen } from "./components/Auth/AuthScreen";
@@ -35,9 +36,8 @@ function App() {
         // Try different user ID fields
         const userId = user.user_id || user.id || user.username;
         console.log("Using user ID:", userId);
-        
-        const pythonApiUrl =  "https://task-agent-api.ngrok.dev";
-        const response = await authFetch(`${pythonApiUrl}/api/v1/onboarding/status/${userId}`);
+
+        const response = await authFetch(`${API_BASE_URL}/api/v1/onboarding/status/${userId}`);
         console.log("Onboarding status response:", response);
         
         if (response.ok) {

@@ -1,13 +1,13 @@
 import { OnboardingFormModal } from './OnboardingFormModal';
+import { API_BASE_URL } from '../../config/api';
 
 const OnboardingFlow = ({ user, onComplete, onLogout }) => {
   const handleComplete = async (formData) => {
     try {
       // API call to save onboarding data
-      const pythonApiUrl = "https://task-agent-api.ngrok.dev";
       const userId = user.user_id || user.id || user.username;
-      
-      const response = await fetch(`${pythonApiUrl}/api/v1/onboarding/complete`, {
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/onboarding/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

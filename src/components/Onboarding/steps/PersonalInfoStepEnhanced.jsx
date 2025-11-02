@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import AvatarDisplay from '../../Common/AvatarDisplay';
 import { ValidatedInput } from '../../Common/ValidatedInput';
 import { validateName, validatePhone, validateDate } from '../../../utils/validation';
+import { API_BASE_URL } from '../../../config/api';
 
 const PersonalInfoStepEnhanced = ({ data, onChange }) => {
   const [formData, setFormData] = useState({
@@ -106,10 +107,9 @@ const PersonalInfoStepEnhanced = ({ data, onChange }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const pythonApiUrl = "https://task-agent-api.ngrok.dev";
       const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${pythonApiUrl}/api/v1/upload/avatar`, {
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/upload/avatar`, {
         method: 'POST',
         headers: {
           'Authorization': `bearer ${token}`

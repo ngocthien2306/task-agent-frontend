@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_BASE_URL } from '../../config/api';
 
 const AvatarDisplay = ({ 
   avatarUrl, 
@@ -31,14 +32,12 @@ const AvatarDisplay = ({
     }
     
     // Legacy support: if it's a relative path or filename, construct full URL
-    const pythonApiUrl =  "https://task-agent-api.ngrok.dev";
-    
     if (url.startsWith('/api/')) {
-      return `${pythonApiUrl}${url}`;
+      return `${API_BASE_URL}${url}`;
     }
-    
+
     // Default: assume it's a filename
-    return `${pythonApiUrl}/api/v1/upload/avatar/${url}`;
+    return `${API_BASE_URL}/api/v1/upload/avatar/${url}`;
   };
 
   const imageUrl = getImageUrl(avatarUrl);

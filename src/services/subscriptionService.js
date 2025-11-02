@@ -2,7 +2,8 @@
  * Subscription Service - Handle all subscription related API calls
  */
 
-const API_BASE_URL = "https://task-agent-api.ngrok.dev";
+import { API_BASE_URL } from '../config/api';
+
 const NODE_API_URL = "https://task-agent-be.ngrok.dev";
 
 export class SubscriptionService {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { API_BASE_URL } from '../../config/api';
 
 const SchedulePage = ({ user }) => {
   const navigate = useNavigate();
@@ -13,7 +14,6 @@ const SchedulePage = ({ user }) => {
   const [dayViewDate, setDayViewDate] = useState(new Date());
 
   const { authFetch } = useAuth();
-  const API_BASE_URL = 'https://task-agent-api.ngrok.dev';
 
   useEffect(() => {
     fetchSchedules();

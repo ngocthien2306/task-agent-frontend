@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import websocketService from '../services/websocketService';
+import { API_BASE_URL } from '../config/api';
 
 export const useWebSocket = (user) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -143,8 +144,7 @@ export const useWebSocket = (user) => {
     if (notification && notification.isStored && notification.storedId) {
       try {
         const token = localStorage.getItem('token');
-        const pythonApiUrl = 'https://task-agent-api.ngrok.dev';
-        await fetch(`${pythonApiUrl}/api/v1/notifications/${notification.storedId}/read`, {
+        await fetch(`${API_BASE_URL}/api/v1/notifications/${notification.storedId}/read`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -179,9 +179,8 @@ export const useWebSocket = (user) => {
       try {
         const token = localStorage.getItem('token');
         console.log('🔑 Token found:', !!token);
-        const pythonApiUrl =  'https://task-agent-api.ngrok.dev';
 
-        const response = await fetch(`${pythonApiUrl}/api/v1/notifications/${notification.id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/v1/notifications/${notification.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -224,8 +223,7 @@ export const useWebSocket = (user) => {
 
     try {
       const token = localStorage.getItem('token');
-      const pythonApiUrl ='https://task-agent-api.ngrok.dev';
-      const response = await fetch(`${pythonApiUrl}/api/v1/notifications/`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/notifications/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

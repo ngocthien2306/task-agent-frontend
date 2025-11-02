@@ -1,4 +1,5 @@
 import { Notification } from '../types';
+import { API_BASE_URL } from '../../../config/api';
 
 export class NotificationService {
   private static instance: NotificationService;
@@ -47,7 +48,6 @@ export class NotificationService {
 
     // Also remove from backend if it's a stored notification
     try {
-      const API_BASE_URL =  'https://task-agent-api.ngrok.dev';
       const savedToken = localStorage.getItem("token");
       
       const response = await fetch(`${API_BASE_URL}/api/v1/notifications/${notificationId}`, {
@@ -78,7 +78,6 @@ export class NotificationService {
 
     // Also clear from backend
     try {
-      const API_BASE_URL =  'https://task-agent-api.ngrok.dev';
       const savedToken = localStorage.getItem("token");
       
       const response = await fetch(`${API_BASE_URL}/api/v1/notifications/clear`, {

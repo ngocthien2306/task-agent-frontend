@@ -5,9 +5,9 @@ import { FloatingShapes } from "../Animations/FloatingShapes";
 import { authService } from "../../services/api";
 import { ValidatedInput } from "../Common/ValidatedInput";
 import { validateRequired } from "../../utils/validation";
+import { API_BASE_URL } from "../../config/api";
 
 export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPassword }) => {
-  const pythonApiUrl = "https://task-agent-api.ngrok.dev";
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     username: "",
@@ -77,7 +77,7 @@ export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPass
       localStorage.setItem("tokenType", loginResult.token_type);
       
       // Get user info
-      const userResponse = await fetch(`${pythonApiUrl}/api/v1/auth/me`, {
+      const userResponse = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
         headers: {
           "Authorization": `${loginResult.token_type} ${loginResult.access_token}`
         }

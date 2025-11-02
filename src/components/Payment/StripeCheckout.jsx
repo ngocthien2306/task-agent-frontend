@@ -1,6 +1,5 @@
 import { useState } from 'react';
-
-const API_URL = 'https://task-agent-api.ngrok.dev/api/v1';
+import { API_URL } from '../../config/api';
 
 export const StripeCheckout = ({ plan, userId, onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);

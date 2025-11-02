@@ -1,5 +1,5 @@
 // API service for backend communication
-const API_BASE_URL = 'https://task-agent-api.ngrok.dev'
+import { API_BASE_URL } from '../config/api';
 
 export const apiEndpoints = {
   // Auth endpoints

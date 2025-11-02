@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { API_BASE_URL } from "../../config/api";
 
 const backendUrl = "https://task-agent-be.ngrok.dev";
-const pythonApiUrl = "https://task-agent-api.ngrok.dev";
 
 const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdated, onTaskDeleted }) => {
   const { user } = useAuth();
@@ -74,7 +74,7 @@ const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdated, onTaskDeleted }
 
     setLoading(true);
     try {
-      const response = await fetch(`${pythonApiUrl}/api/v1/tasks/${task.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${task.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -121,9 +121,9 @@ const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdated, onTaskDeleted }
   const handleDeleteConfirm = async () => {
     setLoading(true);
     setShowDeleteConfirm(false);
-    
+
     try {
-      const response = await fetch(`${pythonApiUrl}/api/v1/tasks/${task.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${task.id}`, {
         method: 'DELETE',
       });
 

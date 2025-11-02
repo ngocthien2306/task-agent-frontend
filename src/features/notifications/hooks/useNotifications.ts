@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Notification, WebSocketHookReturn, ConnectionInfo } from '../types';
 import { NotificationService } from '../services/notificationService';
 import { WebSocketService } from '../services/webSocketService';
+import { API_BASE_URL } from '../../../config/api';
 
 interface User {
   id: string;
@@ -57,7 +58,6 @@ export const useNotifications = (user: User | null): WebSocketHookReturn => {
     if (!user) return;
 
     try {
-      const API_BASE_URL =  'https://task-agent-api.ngrok.dev';
       const savedToken = localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/api/v1/notifications/`, {
         method: 'GET',

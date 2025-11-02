@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { taskService } from '../../services/api';
+import { API_BASE_URL } from '../../config/api';
 import TaskDetailModal from './TaskDetailModal';
 
 const CalendarPage = ({ user }) => {
@@ -28,7 +29,6 @@ const CalendarPage = ({ user }) => {
   const [startInEditMode, setStartInEditMode] = useState(false);
 
   const { authFetch } = useAuth();
-  const API_BASE_URL =  'https://task-agent-api.ngrok.dev';
 
   const handleTaskClick = (task) => {
     setSelectedTask(task);

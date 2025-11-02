@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-const API_URL = 'http://localhost:8000/api/v1';
+const API_URL = 'https://task-agent-api.ngrok.dev/api/v1';
 
 export const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();

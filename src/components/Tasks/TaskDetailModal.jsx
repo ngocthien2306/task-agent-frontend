@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 
-const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+const backendUrl = "https://task-agent-be.ngrok.dev";
+const pythonApiUrl = "https://task-agent-api.ngrok.dev";
 
 const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdated, onTaskDeleted }) => {
   const { user } = useAuth();

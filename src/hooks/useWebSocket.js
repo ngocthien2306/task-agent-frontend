@@ -143,7 +143,7 @@ export const useWebSocket = (user) => {
     if (notification && notification.isStored && notification.storedId) {
       try {
         const token = localStorage.getItem('token');
-        const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+        const pythonApiUrl = 'https://task-agent-api.ngrok.dev';
         await fetch(`${pythonApiUrl}/api/v1/notifications/${notification.storedId}/read`, {
           method: 'POST',
           headers: {
@@ -179,7 +179,7 @@ export const useWebSocket = (user) => {
       try {
         const token = localStorage.getItem('token');
         console.log('🔑 Token found:', !!token);
-        const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+        const pythonApiUrl =  'https://task-agent-api.ngrok.dev';
 
         const response = await fetch(`${pythonApiUrl}/api/v1/notifications/${notification.id}`, {
           method: 'DELETE',
@@ -224,7 +224,7 @@ export const useWebSocket = (user) => {
 
     try {
       const token = localStorage.getItem('token');
-      const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+      const pythonApiUrl ='https://task-agent-api.ngrok.dev';
       const response = await fetch(`${pythonApiUrl}/api/v1/notifications/`, {
         headers: {
           'Authorization': `Bearer ${token}`,

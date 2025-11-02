@@ -92,7 +92,7 @@ const NotificationToast = ({ user }) => {
 
       // Call API to disable socket notifications for this reminder
       const token = localStorage.getItem('token');
-      const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+      const pythonApiUrl = 'https://task-agent-api.ngrok.dev';
       const response = await fetch(`${pythonApiUrl}/api/v1/reminders/${reminderId}/disable-socket`, {
         method: 'PATCH',
         headers: {

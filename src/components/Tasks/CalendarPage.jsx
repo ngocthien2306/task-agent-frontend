@@ -28,7 +28,7 @@ const CalendarPage = ({ user }) => {
   const [startInEditMode, setStartInEditMode] = useState(false);
 
   const { authFetch } = useAuth();
-  const API_BASE_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+  const API_BASE_URL =  'https://task-agent-api.ngrok.dev';
 
   const handleTaskClick = (task) => {
     setSelectedTask(task);

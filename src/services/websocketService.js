@@ -32,7 +32,7 @@ class WebSocketService {
     }
 
     this.userId = userId;
-    const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000';
+    const pythonApiUrl = 'https://task-agent-api.ngrok.dev';
     const wsUrl = pythonApiUrl.replace('http', 'ws') + `/api/v1/ws/notifications/${userId}`;
 
     console.log('🔌 Connecting to WebSocket:', wsUrl);

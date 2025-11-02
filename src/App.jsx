@@ -36,7 +36,7 @@ function App() {
         const userId = user.user_id || user.id || user.username;
         console.log("Using user ID:", userId);
         
-        const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+        const pythonApiUrl =  "https://task-agent-api.ngrok.dev";
         const response = await authFetch(`${pythonApiUrl}/api/v1/onboarding/status/${userId}`);
         console.log("Onboarding status response:", response);
         

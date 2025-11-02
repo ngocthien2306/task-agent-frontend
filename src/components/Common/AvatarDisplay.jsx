@@ -31,7 +31,7 @@ const AvatarDisplay = ({
     }
     
     // Legacy support: if it's a relative path or filename, construct full URL
-    const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+    const pythonApiUrl =  "https://task-agent-api.ngrok.dev";
     
     if (url.startsWith('/api/')) {
       return `${pythonApiUrl}${url}`;

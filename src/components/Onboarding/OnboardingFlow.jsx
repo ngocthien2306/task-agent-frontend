@@ -4,7 +4,7 @@ const OnboardingFlow = ({ user, onComplete, onLogout }) => {
   const handleComplete = async (formData) => {
     try {
       // API call to save onboarding data
-      const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+      const pythonApiUrl = "https://task-agent-api.ngrok.dev";
       const userId = user.user_id || user.id || user.username;
       
       const response = await fetch(`${pythonApiUrl}/api/v1/onboarding/complete`, {

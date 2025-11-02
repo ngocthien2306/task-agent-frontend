@@ -7,7 +7,7 @@ import { ValidatedInput } from "../Common/ValidatedInput";
 import { validateRequired } from "../../utils/validation";
 
 export const Login = ({ onSwitchToRegister, onLoginSuccess, onSwitchToForgotPassword }) => {
-  const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+  const pythonApiUrl = "https://task-agent-api.ngrok.dev";
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     username: "",

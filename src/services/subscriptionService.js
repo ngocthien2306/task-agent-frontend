@@ -2,8 +2,8 @@
  * Subscription Service - Handle all subscription related API calls
  */
 
-const API_BASE_URL = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
-const NODE_API_URL = import.meta.env.VITE_NODE_API_URL || "http://localhost:3000";
+const API_BASE_URL = "https://task-agent-api.ngrok.dev";
+const NODE_API_URL = "https://task-agent-be.ngrok.dev";
 
 export class SubscriptionService {
   constructor(authFetch = null) {

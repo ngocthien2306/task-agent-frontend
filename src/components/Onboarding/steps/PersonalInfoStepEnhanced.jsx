@@ -106,7 +106,7 @@ const PersonalInfoStepEnhanced = ({ data, onChange }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const pythonApiUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
+      const pythonApiUrl = "https://task-agent-api.ngrok.dev";
       const token = localStorage.getItem('token');
       
       const response = await fetch(`${pythonApiUrl}/api/v1/upload/avatar`, {

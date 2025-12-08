@@ -22,7 +22,7 @@ export const useSubscription = () => {
   // Error states
   const [error, setError] = useState(null);
 
-  const userId = user?.id;
+  const userId = user?.username;
 
   /**
    * Load user's subscription data
